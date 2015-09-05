@@ -21,11 +21,11 @@ var MAX_HOUR = 23;
 			hours: [],
 			currentHour: 0,
 			beginHour: 0,
+			rate: 0.4,
 			step: {
 				len: 20,
 				deg: 25
 			},
-			rate: 0.4,
 			swipeDuration: 3000,
 			swipeDefaultStep: 4,
 			rollbackDuration: 1000
@@ -220,7 +220,7 @@ var MAX_HOUR = 23;
 			if (tmpYTranslate >= minTranslate || tmpYTranslate <= -maxTranslate) {
 				var diff;
 				if (tmpYTranslate >= minTranslate) {
-					diff = yTranslate - minTranslate;
+					diff = -yTranslate - minTranslate;
 				} else {
 					diff = -yTranslate - maxTranslate;
 				}
@@ -490,8 +490,15 @@ var MAX_HOUR = 23;
 
 			var yTranslate;
 
-			if (Math.abs(deg) <= 90)
+			var steplen = this._options.step.len;
+			var stepdeg = this._options.step.deg;
+
+			if (Math.abs(deg) <= 90) {
 				yTranslate = deg * this._options.rate + 'px';
+				cssValue['visibility'] = 'visible';
+			} else {
+				cssValue['visibility'] = 'hidden';
+			}
 
 			cssValue[this.transformKey] = 'rotateX(' + deg + 'deg) translateY(' + yTranslate + ')';
 
