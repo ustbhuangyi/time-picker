@@ -1,0 +1,30 @@
+{
+  "name": "time-picker",
+  "version": "0.0.1",
+  "description": "a time picker which experience like IOS",
+  "author": {
+    "name": "huangyi",
+    "email": "ustbhuangyi@gmail.com"
+  },
+  "bugs": {
+    "url": "https://github.com/ustbhuangyi/time-picker/issues"
+  },
+  "homepage": "https://github.com/ustbhuangyi/time-picker",
+  "keywords": [
+    "time-picker",
+    "javascript",
+    "ios"
+  ],
+  "licenses": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:ustbhuangyi/time-picker.git"
+  },
+  "dependencies": {
+    "gulp": "^3.9.0",
+    "del": "^0.1.0",
+    "gulp-webpack": "^1.3.2",
+    "gulp-inline-js": "0.0.1",
+    "browser-sync": "^2.2.1"
+  }
+}
