@@ -26,6 +26,8 @@ var MAX_HOUR = 23;
 				len: 20,
 				deg: 25
 			},
+			velocity: 500,
+			threshold: 20,
 			swipeDuration: 3000,
 			swipeDefaultStep: 4,
 			rollbackDuration: 1000
@@ -106,7 +108,7 @@ var MAX_HOUR = 23;
 
 				var direction = delta > 0 ? DIREACTION_DOWN : DIREACTION_UP;
 
-				if (duration < 500 && Math.abs(delta) > 20) {
+				if (duration < me._options.velocity && Math.abs(delta) > me._options.threshold) {
 					var runStep = me._getRunStepBySwipe(Math.abs(delta));
 					me._wheelSwipe(me.$hour, me.$houritems, {
 						direction: direction,
@@ -489,9 +491,6 @@ var MAX_HOUR = 23;
 			var cssValue = {};
 
 			var yTranslate;
-
-			var steplen = this._options.step.len;
-			var stepdeg = this._options.step.deg;
 
 			if (Math.abs(deg) <= 90) {
 				yTranslate = deg * this._options.rate + 'px';
