@@ -27,8 +27,8 @@ var MAX_HOUR = 23;
 				deg: 25
 			},
 			velocity: 500,
-			threshold: 20,
-			swipeDuration: 3000,
+			threshold: 15,
+			swipeDuration: 2500,
 			swipeDefaultStep: 4,
 			rollbackDuration: 1000
 		},
@@ -108,16 +108,20 @@ var MAX_HOUR = 23;
 
 				var direction = delta > 0 ? DIREACTION_DOWN : DIREACTION_UP;
 
-				if (duration < me._options.velocity && Math.abs(delta) > me._options.threshold) {
-					var runStep = me._getRunStepBySwipe(Math.abs(delta));
+				delta = Math.abs(delta);
+
+				if (duration < me._options.velocity && delta > me._options.threshold) {
+					var runStep = me._getRunStepBySwipe(delta);
 					me._wheelSwipe(me.$hour, me.$houritems, {
 						direction: direction,
 						runStep: runStep,
+						delta: delta,
 						type: 'normal'
 					});
 					me._wheelSwipe(me.$hourmirror, me.$hourmirroritems, {
 						direction: direction,
 						runStep: runStep,
+						delta: delta,
 						type: 'mirror'
 					});
 				}
@@ -167,7 +171,7 @@ var MAX_HOUR = 23;
 			}
 		},
 		_getRunStepBySwipe: function (distance) {
-			return Math.ceil(distance / 10);
+			return Math.ceil(distance / 10) * 2
 		},
 		_initWheel: function ($wheel, $items, current, begin, end, type) {
 
@@ -313,6 +317,7 @@ var MAX_HOUR = 23;
 
 			var direction = option.direction;
 			var runStep = option.runStep;
+			var delta = option.delta;
 			//var current = $wheel.data('current');
 			var translate = $wheel.data('tmpYTranslate');
 			console.log(translate);
@@ -321,7 +326,7 @@ var MAX_HOUR = 23;
 				return;
 
 			var steplen = this._options.step.len;
-			var runDistance = runStep * steplen;
+			var runDistance = runStep * steplen - delta;
 
 			var begin = $wheel.data('begin');
 			var end = $wheel.data('end');
