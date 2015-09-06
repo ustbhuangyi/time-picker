@@ -1,6 +1,7 @@
 var _ = require('../util');
 var each = _.each;
 var format = _.format;
+var easing = _.easing;
 var Timeline = _.Timeline;
 
 var DIREACTION_UP = 'up';
@@ -78,7 +79,7 @@ var MAX_HOUR = 23;
 				//var runStep = me._getRunStepByMove(data.distance);
 				firstTouch = e.touches[0];
 				touch.y2 = firstTouch.pageY;
-				console.log('y2:' + touch.y2);
+
 				me._wheelMove(me.$hour, me.$houritems, {
 					distance: touch.y2 - touch.y1,
 					type: 'normal'
@@ -200,8 +201,6 @@ var MAX_HOUR = 23;
 			var type = option.type || 'normal';
 			//var direction = option.direction;
 			var distance = option.distance;
-			//var maxValue = option.maxValue;
-			console.log('distance:' + distance);
 
 			var steplen = this._options.step.len;
 			var stepdeg = this._options.step.deg;
@@ -219,10 +218,6 @@ var MAX_HOUR = 23;
 
 			var tmpYTranslate = $wheel.data('tmpYTranslate');
 
-			console.log('yTranslate:' + yTranslate);
-			console.log('tmpYTranslate:' + tmpYTranslate);
-
-			console.log('move:' + tmpYTranslate);
 			if (tmpYTranslate >= minTranslate || tmpYTranslate <= -maxTranslate) {
 				var diff;
 				if (tmpYTranslate >= minTranslate) {
@@ -233,7 +228,7 @@ var MAX_HOUR = 23;
 
 				distance = (distance - diff) * 0.3 + diff;
 			}
-			console.log('move:' + distance);
+
 			var translate = yTranslate + distance;
 			var translateCss = {};
 			translateCss[this.transformKey] = 'translateY(' + translate + 'px)';
@@ -250,7 +245,6 @@ var MAX_HOUR = 23;
 				me._reSetCss($(this), cssValue);
 			});
 
-			//console.log(runStep);
 		},
 		_wheelAdjust: function ($wheel, $items, option, callback) {
 
@@ -292,10 +286,6 @@ var MAX_HOUR = 23;
 			}
 			var runDistance = targetTranslate - translate;
 
-			console.log('translate:' + translate);
-			console.log('target:' + targetTranslate);
-			console.log('run:' + runDistance);
-
 			$items.each(function () {
 				var deg = $(this).data('tmpdeg');
 				$(this).data('deg', deg);
@@ -306,7 +296,7 @@ var MAX_HOUR = 23;
 				direction: direction,
 				runDistance: runDistance,
 				duration: 50,
-				easeFn: this._easeOutQuad
+				easeFn: easing.easeOutQuad
 			};
 
 			this._wheelRun($wheel, $items, runOption, callback);
@@ -320,8 +310,7 @@ var MAX_HOUR = 23;
 			var delta = option.delta;
 			//var current = $wheel.data('current');
 			var translate = $wheel.data('tmpYTranslate');
-			console.log(translate);
-			//alert('swipe:' + translate);
+
 			if (!translate && translate !== 0)
 				return;
 
@@ -332,8 +321,7 @@ var MAX_HOUR = 23;
 			var end = $wheel.data('end');
 			var minTranslate = begin * steplen;
 			var maxTranslate = (end - begin) * steplen;
-			console.log(runDistance);
-			console.log(maxTranslate);
+
 			var diff;
 			if (direction === DIREACTION_DOWN) {
 				diff = runDistance + translate;
@@ -354,15 +342,15 @@ var MAX_HOUR = 23;
 				runDistance = direction === DIREACTION_DOWN ? -translate : -translate - maxTranslate;
 				//alert(runDistance);
 				if (translate > minTranslate || translate < -maxTranslate) {
-					easeFn = this._easeInBack;
+					easeFn = easing.easeInBack;
 				} else {
-					easeFn = this._easeOutBack;
+					easeFn = easing.easeOutBack;
 				}
 				easeExtra = this._getEaseExtraByDiff(diff);
 			} else {
 				duration = this._options.swipeDuration;
 				runDistance = direction === DIREACTION_DOWN ? runDistance : -runDistance;
-				easeFn = this._easeOutQuart
+				easeFn = easing.easeOutQuart
 			}
 
 			var runOption = {
@@ -416,9 +404,7 @@ var MAX_HOUR = 23;
 						var deg;
 						if (timeup) {
 							deg = $(this).data('deg') + degChange;
-							console.log('before:' + $(this).data('deg'));
-							console.log('change:' + degChange);
-							console.log(deg);
+
 						} else {
 							deg = $(this).data('tmpdeg');
 						}
@@ -445,7 +431,7 @@ var MAX_HOUR = 23;
 					//} else {
 					//	current = Math.max(current - hasruned, begin);
 					//}
-					console.log('downTranslate:' + translate);
+					
 					var translateCss = {};
 					translateCss[me.transformKey] = 'translateY(' + translate + 'px)';
 					$wheel.data('isRunning', false)
@@ -531,23 +517,6 @@ var MAX_HOUR = 23;
 		},
 		_getEaseExtraByDiff: function (diff) {
 			return diff * 0.05;
-		},
-		_easeOutQuad: function (x, t, b, c, d) {
-			return -c * (t /= d) * (t - 2) + b;
-		},
-		_easeOutQuart: function (x, t, b, c, d) {
-			return -c * ((t = t / d - 1) * t * t * t - 1) + b;
-		},
-		_easeOutExpo: function (x, t, b, c, d) {
-			return (t == d) ? b + c : c * (-Math.pow(2, -10 * t / d) + 1) + b;
-		},
-		_easeOutBack: function (x, t, b, c, d, s) {
-			if (s == undefined) s = 1.70158;
-			return c * ((t = t / d - 1) * t * ((s + 1) * t + s) + 1) + b;
-		},
-		_easeInBack: function (x, t, b, c, d, s) {
-			if (s == undefined) s = 1.70158;
-			return c * (t /= d) * t * ((s + 1) * t - s) + b;
 		}
 	});
 })

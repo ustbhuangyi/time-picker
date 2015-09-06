@@ -1,3 +1,5 @@
+'use strict';
+
 var requestAnimationFrame,
 	cancelAnimationFrame,
 	DEFAULT_INTERVAL = 1000 / 60;

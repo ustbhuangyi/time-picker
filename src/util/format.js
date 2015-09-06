@@ -33,6 +33,8 @@
  * @return string 格式化后的字符串
  */
 
+'use strict';
+
 function format(source, opts, config) {
 	var data = Array.prototype.slice.call(arguments, 1);
 	var toString = Object.prototype.toString;
