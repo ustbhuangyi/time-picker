@@ -3,31 +3,52 @@ var each = _.each;
 var format = _.format;
 var easing = _.easing;
 var Timeline = _.Timeline;
+var date = _.date;
 
 var DIREACTION_UP = 'up';
 var DIREACTION_DOWN = 'down';
 
-var MAX_HOUR = 23;
 
 (function (gmu, $, undefined) {
 	gmu.define('timePicker', {
 		options: {
 			listTpl: '<div class="timepicker">' +
+			'<div class="wheel">' +
+			'<ul class="day day-hook"></ul>' +
 			'<ul class="hour hour-hook"></ul>' +
+			'<ul class="minute minute-hook"></ul>' +
+			'</div>' +
 			'<div class="center">' +
+			'<ul class="daymirror daymirror-hook"></ul>' +
 			'<ul class="hourmirror hourmirror-hook"></ul>' +
+			'<ul class="minutemirror minutemirror-hook"></ul>' +
 			'</div>' +
 			'</div>',
-			itemTpl: '<li data-val="#{hour}" class="item #{current}">#{hour}点</li>',
-			hours: [],
-			currentHour: 0,
-			beginHour: 0,
+			itemTpl: '<li data-val="#{val}" data-index="#{index}" class="item #{current}">#{text}</li>',
+			hour: {
+				step: 1,
+				min: 0,
+				max: 23
+			},
+			minute: {
+				step: 10,
+				min: 0,
+				max: 50
+			},
+			day: {
+				step: 1,
+				len: 7,
+				filter: ['今天', '明天', '后天'],
+				format: 'M月d日'
+			},
+			delay: date.MINUTE_TIMESTAMP * 15,
+			selectTime: +new Date,
 			rate: 0.4,
 			step: {
 				len: 20,
 				deg: 25
 			},
-			velocity: 500,
+			velocity: 300,
 			threshold: 15,
 			swipeDuration: 2500,
 			swipeDefaultStep: 4,
@@ -35,73 +56,256 @@ var MAX_HOUR = 23;
 		},
 		_create: function () {
 			this.$list = $(this._options.listTpl).appendTo($(document.body));
+
+			this.$day = $('.day-hook', this.$list);
+			this.$daymirror = $('.daymirror-hook', this.$list);
+
 			this.$hour = $('.hour-hook', this.$list);
 			this.$hourmirror = $('.hourmirror-hook', this.$list);
+
+			this.$minute = $('.minute-hook', this.$list);
+			this.$minutemirror = $('.minutemirror-hook', this.$list);
 
 			this.transformKey = $.fx.cssPrefix + 'transform';
 
 			this._bindEvent();
 		},
 		_init: function () {
-			if (!this._options.hours.length) {
-				this.hours = this._genDefaultHours();
+			this.current = new Date(+new Date + this._options.delay);
+
+			this.selectedDate = this._options.selectedDate || this.current;
+
+			this._initDays();
+
+			this._initHours();
+
+			this._initMinutes();
+
+		},
+		_initDays: function () {
+			this.days = this._genDays();
+			var current = (+date.getZeroDate(this.selectedDate) - +date.getZeroDate(this.current)) / date.DAY_TIMESTAMP;
+			var begin = 0;
+			var end = this.days.length - 1;
+			this._fillDays(begin, end, current);
+		},
+		_genDays: function () {
+			var days = [];
+			var dayConf = this._options.day;
+			var zeroTimestamp = +date.getZeroDate(this.current);
+			var format = dayConf.format;
+			for (var i = 0; i < dayConf.len; i += dayConf.step) {
+				var timestamp = zeroTimestamp + i * date.DAY_TIMESTAMP;
+
+				if (dayConf.filter && i < dayConf.filter.length) {
+					days.push({
+						val: timestamp,
+						text: dayConf.filter[i]
+					});
+				} else {
+					days.push({
+						val: timestamp,
+						text: date.format(new Date(timestamp), format)
+					});
+				}
 			}
-			this.currentHour = this._options.currentHour || this.hours[0];
-			this.beginHour = this._options.beginHour;
-			this._fillHours(this.beginHour);
+			return days;
+		},
+		_fillDays: function (begin, end, current) {
+			var days = this.days.slice(begin);
+			var tpl = [];
+			each(days, function (item, index) {
+				tpl.push(format(this._options.itemTpl, {
+					val: item.val,
+					text: item.text,
+					index: index + begin,
+					current: item.val === this.days[current].val ? 'current' : ''
+				}));
+			}, this);
+			var strTpl = tpl.join('');
+			this.$dayitems = $(strTpl).appendTo(this.$day);
+			this.$daymirroritems = $(strTpl).appendTo(this.$daymirror);
+
+			this.$day.data('current', current);
+			this._initWheel(this.$day, this.$dayitems, current, begin, end, 'normal');
+			this._initWheel(this.$daymirror, this.$daymirroritems, current, begin, end, 'mirror');
+
+		},
+		_initHours: function () {
+			this.hours = this._genHours();
+			var hourConf = this._options.hour;
+			var current = Math.ceil(this.selectedDate.getHours() / hourConf.step);
+			var begin = Math.ceil(this.current.getHours() / hourConf.step);
+			var end = this.hours.length - 1;
+			this._fillHours(begin, end, current);
+		},
+		_genHours: function () {
+			var hours = [];
+			var hourConf = this._options.hour;
+			for (var i = hourConf.min; i <= hourConf.max; i += hourConf.step) {
+				hours.push({
+					val: i,
+					text: i + '点'
+				});
+			}
+			return hours;
+		},
+		_fillHours: function (begin, end, current) {
+			var hours = this.hours.slice(begin);
+			var tpl = [];
+			each(hours, function (item, index) {
+				tpl.push(format(this._options.itemTpl, {
+					val: item.val,
+					text: item.text,
+					index: index + begin,
+					current: item.val === this.hours[current].val ? 'current' : ''
+				}));
+			}, this);
+			var strTpl = tpl.join('');
+			this.$houritems = $(strTpl).appendTo(this.$hour);
+			this.$hourmirroritems = $(strTpl).appendTo(this.$hourmirror);
+
+			this.$hour.data('current', current);
+			this._initWheel(this.$hour, this.$houritems, current, begin, end, 'normal');
+			this._initWheel(this.$hourmirror, this.$hourmirroritems, current, begin, end, 'mirror');
+		},
+		_initMinutes: function () {
+			this.minutes = this._genMinutes();
+			var minuteConf = this._options.minute;
+			var current = Math.ceil(this.selectedDate.getMinutes() / minuteConf.step);
+			var begin = Math.ceil(this.current.getMinutes() / minuteConf.step);
+			var end = this.minutes.length - 1;
+			this._fillMinutes(begin, end, current);
+		},
+		_genMinutes: function () {
+			var minutes = [];
+			var minuteConf = this._options.minute;
+			for (var i = minuteConf.min; i <= minuteConf.max; i += minuteConf.step) {
+				minutes.push({
+					val: i,
+					text: i + '分'
+				});
+			}
+			return minutes;
+		},
+		_fillMinutes: function (begin, end, current) {
+			var minutes = this.minutes.slice(begin);
+			var tpl = [];
+			each(minutes, function (item, index) {
+				tpl.push(format(this._options.itemTpl, {
+					val: item.val,
+					text: item.text,
+					index: index + begin,
+					current: item.val === this.minutes[current].val ? 'current' : ''
+				}));
+			}, this);
+			var strTpl = tpl.join('');
+			this.$minuteitems = $(strTpl).appendTo(this.$minute);
+			this.$minutemirroritems = $(strTpl).appendTo(this.$minutemirror);
+
+			this.$minute.data('current', current);
+
+			this._initWheel(this.$minute, this.$minuteitems, current, begin, end, 'normal');
+			this._initWheel(this.$minutemirror, this.$minutemirroritems, current, begin, end, 'mirror');
+
+		},
+		_initWheel: function ($wheel, $items, current, begin, end, type) {
+
+			var steplen = this._options.step.len;
+
+			var yTranslate = -steplen * (current - begin);
+			var translateCss = {};
+			translateCss[this.transformKey] = 'translateY(' + yTranslate + 'px)';
+			$wheel.css(translateCss)
+				.data('yTranslate', yTranslate)
+				.data('current', current).
+				data('begin', begin).
+				data('end', end);
+			var me = this;
+			$items.each(function () {
+				var diff = $(this).data('index') - current;
+				var deg = diff * me._options.step.deg;
+				$(this).data('deg', deg);
+
+				var cssValue = me._getCssByDeg(deg, type);
+				me._reSetCss($(this), cssValue);
+			});
 		},
 		_bindEvent: function () {
 
+			this.$list.on('touchstart', function (e) {
+				return false;
+			});
+
+			this._bindDayEvent();
+
+			this._bindHourEvent();
+
+			this._bindMinuteEvent();
+
+		},
+		_bindDayEvent: function () {
 			var me = this;
-
 			var timer = 0;
-
 			var touch = {};
 			var start;
 			var delta;
 			var firstTouch;
 
-			this.$list.on('touchstart', function (e) {
-				//alert(1);
+			this.$day.on('touchstart', onTouchStart).
+				on('touchmove', onTouchMove).
+				on('touchend', onTouchEnd);
+
+			this.$daymirror.on('touchstart', onTouchStart).
+				on('touchmove', onTouchMove).
+				on('touchend', onTouchEnd);
+
+			function onTouchStart(e) {
 				firstTouch = e.touches[0];
 				touch.y1 = firstTouch.pageY;
 
 				start = +new Date;
 
 				clearTimeout(timer);
-				if (me.$hour.data('isRunning')) {
-					me.$hour.data('needStop', true);
-					me.$hourmirror.data('needStop', true);
+				if (me.$day.data('isRunning')) {
+					me.$day.data('needStop', true);
+					me.$daymirror.data('needStop', true);
+				}
+
+				if (me.$day.data('tmpYTranslate') || me.$day.data('tmpYTranslate') === 0) {
+
+					me.$day.data('yTranslate', me.$day.data('tmpYTranslate'));
+					me.$dayitems.each(function () {
+						$(this).data('deg', $(this).data('tmpdeg'));
+					});
+
+					me.$daymirror.data('yTranslate', me.$daymirror.data('tmpYTranslate'));
+
+					me.$daymirroritems.each(function () {
+						$(this).data('deg', $(this).data('tmpdeg'));
+					});
+
 				}
 
 				event.preventDefault();
-			}).on('touchmove', function (e) {
-				//var runStep = me._getRunStepByMove(data.distance);
+			}
+
+			function onTouchMove(e) {
 				firstTouch = e.touches[0];
 				touch.y2 = firstTouch.pageY;
+				var distance = touch.y2 - touch.y1;
 
-				me._wheelMove(me.$hour, me.$houritems, {
-					distance: touch.y2 - touch.y1,
+				me._wheelMove(me.$day, me.$dayitems, {
+					distance: distance,
 					type: 'normal'
 				});
-				me._wheelMove(me.$hourmirror, me.$hourmirroritems, {
-					distance: touch.y2 - touch.y1,
+				me._wheelMove(me.$daymirror, me.$daymirroritems, {
+					distance: distance,
 					type: 'mirror'
 				});
-			}).on('touchend', function (e) {
+			}
 
-				me.$hour.data('yTranslate', me.$hour.data('tmpYTranslate'));
-				me.$houritems.each(function () {
-					$(this).data('deg', $(this).data('tmpdeg'));
-				});
-				//
-				me.$hourmirror.data('yTranslate', me.$hourmirror.data('tmpYTranslate'));
-
-				me.$hourmirroritems.each(function () {
-					$(this).data('deg', $(this).data('tmpdeg'));
-				});
-
-				//firstTouch = e.touches[0];
+			function onTouchEnd(e) {
 				touch.y2 = firstTouch.pageY;
 
 				var duration = +new Date - start;
@@ -113,6 +317,109 @@ var MAX_HOUR = 23;
 
 				if (duration < me._options.velocity && delta > me._options.threshold) {
 					var runStep = me._getRunStepBySwipe(delta);
+
+					me._wheelSwipe(me.$day, me.$dayitems, {
+						direction: direction,
+						runStep: runStep,
+						delta: delta,
+						type: 'normal'
+					});
+					me._wheelSwipe(me.$daymirror, me.$daymirroritems, {
+						direction: direction,
+						runStep: runStep,
+						delta: delta,
+						type: 'mirror'
+					});
+				}
+				else {
+					clearTimeout(timer);
+					timer = setTimeout(function () {
+						if (!me.$day.data('isRunning')) {
+							me._wheelAdjust(me.$day, me.$dayitems, {
+								type: 'normal'
+							});
+							me._wheelAdjust(me.$daymirror, me.$daymirroritems, {
+								type: 'mirror'
+							});
+						}
+					}, 20);
+				}
+			}
+		},
+		_bindHourEvent: function () {
+			var me = this;
+			var timer = 0;
+			var touch = {};
+			var start;
+			var delta;
+			var firstTouch;
+
+			this.$hour.on('touchstart', onTouchStart).
+				on('touchmove', onTouchMove).
+				on('touchend', onTouchEnd);
+
+			this.$hourmirror.on('touchstart', onTouchStart).
+				on('touchmove', onTouchMove).
+				on('touchend', onTouchEnd);
+
+			function onTouchStart(e) {
+				firstTouch = e.touches[0];
+				touch.y1 = firstTouch.pageY;
+
+				start = +new Date;
+
+				clearTimeout(timer);
+				if (me.$hour.data('isRunning')) {
+					me.$hour.data('needStop', true);
+					me.$hourmirror.data('needStop', true);
+				}
+
+				if (me.$hour.data('tmpYTranslate') || me.$hour.data('tmpYTranslate') === 0) {
+
+					me.$hour.data('yTranslate', me.$hour.data('tmpYTranslate'));
+					me.$houritems.each(function () {
+						$(this).data('deg', $(this).data('tmpdeg'));
+					});
+
+					me.$hourmirror.data('yTranslate', me.$hourmirror.data('tmpYTranslate'));
+
+					me.$hourmirroritems.each(function () {
+						$(this).data('deg', $(this).data('tmpdeg'));
+					});
+
+				}
+
+				event.preventDefault();
+			}
+
+			function onTouchMove(e) {
+				firstTouch = e.touches[0];
+				touch.y2 = firstTouch.pageY;
+				var distance = touch.y2 - touch.y1;
+
+				me._wheelMove(me.$hour, me.$houritems, {
+					distance: distance,
+					type: 'normal'
+				});
+				me._wheelMove(me.$hourmirror, me.$hourmirroritems, {
+					distance: distance,
+					type: 'mirror'
+				});
+			}
+
+			function onTouchEnd(e) {
+				touch.y2 = firstTouch.pageY;
+
+				var duration = +new Date - start;
+				delta = touch.y2 - touch.y1;
+
+				var direction = delta > 0 ? DIREACTION_DOWN : DIREACTION_UP;
+
+				delta = Math.abs(delta);
+
+				if (duration < me._options.velocity && delta > me._options.threshold) {
+					var runStep = me._getRunStepBySwipe(delta);
+
 					me._wheelSwipe(me.$hour, me.$houritems, {
 						direction: direction,
 						runStep: runStep,
@@ -138,63 +445,110 @@ var MAX_HOUR = 23;
 							});
 						}
 					}, 20);
+				}
+			}
+		},
+		_bindMinuteEvent: function () {
+			var me = this;
+			var timer = 0;
+			var touch = {};
+			var start;
+			var delta;
+			var firstTouch;
+
+			this.$minute.on('touchstart', onTouchStart).
+				on('touchmove', onTouchMove).
+				on('touchend', onTouchEnd);
+
+			this.$minutemirror.on('touchstart', onTouchStart).
+				on('touchmove', onTouchMove).
+				on('touchend', onTouchEnd);
+
+			function onTouchStart(e) {
+				firstTouch = e.touches[0];
+				touch.y1 = firstTouch.pageY;
+
+				start = +new Date;
+
+				clearTimeout(timer);
+				if (me.$minute.data('isRunning')) {
+					me.$minute.data('needStop', true);
+					me.$minutemirror.data('needStop', true);
+				}
+
+				if (me.$minute.data('tmpYTranslate') || me.$minute.data('tmpYTranslate') === 0) {
+
+					me.$minute.data('yTranslate', me.$minute.data('tmpYTranslate'));
+					me.$minuteitems.each(function () {
+						$(this).data('deg', $(this).data('tmpdeg'));
+					});
+
+					me.$minutemirror.data('yTranslate', me.$minutemirror.data('tmpYTranslate'));
+
+					me.$minutemirroritems.each(function () {
+						$(this).data('deg', $(this).data('tmpdeg'));
+					});
 
 				}
-			});
 
-		},
-		_genDefaultHours: function () {
-			var hours = [];
-			for (var i = 0; i <= MAX_HOUR; i++) {
-				hours.push(i);
+				event.preventDefault();
 			}
-			return hours;
-		},
-		_fillHours: function (begin) {
-			var hours = this.hours;
-			if (begin !== undefined) {
-				hours = hours.slice(hours.indexOf(begin));
+
+			function onTouchMove(e) {
+				firstTouch = e.touches[0];
+				touch.y2 = firstTouch.pageY;
+				var distance = touch.y2 - touch.y1;
+
+				me._wheelMove(me.$minute, me.$minuteitems, {
+					distance: distance,
+					type: 'normal'
+				});
+				me._wheelMove(me.$minutemirror, me.$minutemirroritems, {
+					distance: distance,
+					type: 'mirror'
+				});
 			}
-			var tpl = [];
-			each(hours, function (item) {
-				tpl.push(format(this._options.itemTpl, {
-					hour: item,
-					current: item === this.currentHour ? 'current' : ''
-				}));
-			}, this);
-			this.$houritems = $(tpl.join('')).appendTo(this.$hour);
-			this.$hourmirroritems = $(tpl.join('')).appendTo(this.$hourmirror);
 
-			if (this.currentHour !== undefined) {
-				this.$hour.data('current', this.currentHour);
-				this._initWheel(this.$hour, this.$houritems, this.currentHour, 0, MAX_HOUR, 'normal');
-				this._initWheel(this.$hourmirror, this.$hourmirroritems, this.currentHour, 0, MAX_HOUR, 'mirror');
+			function onTouchEnd(e) {
+				touch.y2 = firstTouch.pageY;
+
+				var duration = +new Date - start;
+				delta = touch.y2 - touch.y1;
+
+				var direction = delta > 0 ? DIREACTION_DOWN : DIREACTION_UP;
+
+				delta = Math.abs(delta);
+
+				if (duration < me._options.velocity && delta > me._options.threshold) {
+					var runStep = me._getRunStepBySwipe(delta);
+
+					me._wheelSwipe(me.$minute, me.$minuteitems, {
+						direction: direction,
+						runStep: runStep,
+						delta: delta,
+						type: 'normal'
+					});
+					me._wheelSwipe(me.$minutemirror, me.$minutemirroritems, {
+						direction: direction,
+						runStep: runStep,
+						delta: delta,
+						type: 'mirror'
+					});
+				}
+				else {
+					clearTimeout(timer);
+					timer = setTimeout(function () {
+						if (!me.$minute.data('isRunning')) {
+							me._wheelAdjust(me.$minute, me.$minuteitems, {
+								type: 'normal'
+							});
+							me._wheelAdjust(me.$minutemirror, me.$minutemirroritems, {
+								type: 'mirror'
+							});
+						}
+					}, 20);
+				}
 			}
-		},
-		_getRunStepBySwipe: function (distance) {
-			return Math.ceil(distance / 10) * 2
-		},
-		_initWheel: function ($wheel, $items, current, begin, end, type) {
-
-			var steplen = this._options.step.len;
-
-			var yTranslate = -steplen * current;
-			var translateCss = {};
-			translateCss[this.transformKey] = 'translateY(' + yTranslate + 'px)';
-			$wheel.css(translateCss)
-				.data('yTranslate', yTranslate)
-				.data('current', current).
-				data('begin', begin).
-				data('end', end);
-			var me = this;
-			$items.each(function () {
-				var diff = $(this).data('val') - current;
-				var deg = diff * me._options.step.deg;
-				$(this).data('deg', deg);
-
-				var cssValue = me._getCssByDeg(deg, type);
-				me._reSetCss($(this), cssValue);
-			});
 		},
 		_wheelMove: function ($wheel, $items, option) {
 
@@ -207,21 +561,17 @@ var MAX_HOUR = 23;
 
 			var begin = $wheel.data('begin');
 			var end = $wheel.data('end');
-			var minTranslate = begin * steplen;
+			//var minTranslate = begin * steplen;
 			var maxTranslate = (end - begin) * steplen;
 
 			var yTranslate = $wheel.data('yTranslate');
 
-			//if (direction === DIREACTION_UP) {
-			//	distance = -distance;
-			//}
-
 			var tmpYTranslate = $wheel.data('tmpYTranslate');
 
-			if (tmpYTranslate >= minTranslate || tmpYTranslate <= -maxTranslate) {
+			if (tmpYTranslate >= 0 || tmpYTranslate <= -maxTranslate) {
 				var diff;
-				if (tmpYTranslate >= minTranslate) {
-					diff = -yTranslate - minTranslate;
+				if (tmpYTranslate >= 0) {
+					diff = -yTranslate;
 				} else {
 					diff = -yTranslate - maxTranslate;
 				}
@@ -261,6 +611,7 @@ var MAX_HOUR = 23;
 			var begin = $wheel.data('begin');
 			var end = $wheel.data('end');
 			var maxTranslate = (end - begin) * steplen;
+
 			var targetTranslate;
 
 
@@ -271,7 +622,7 @@ var MAX_HOUR = 23;
 			} else {
 				if (translate % steplen === 0)
 					return;
-				//var rest = Math.abs(translate % steplen)
+
 				targetTranslate = Math.floor(translate / steplen) * steplen + ( Math.abs(translate % steplen) <= 10 ? steplen : 0);
 			}
 
@@ -319,13 +670,20 @@ var MAX_HOUR = 23;
 
 			var begin = $wheel.data('begin');
 			var end = $wheel.data('end');
-			var minTranslate = begin * steplen;
+
 			var maxTranslate = (end - begin) * steplen;
+
+			var targetTranslate = this._getTargetTranslate($wheel.data('yTranslate'), maxTranslate);
+			var targetDiff = Math.abs(targetTranslate - $wheel.data('yTranslate'));
+
+			runDistance += targetDiff;
 
 			var diff;
 			if (direction === DIREACTION_DOWN) {
+
 				diff = runDistance + translate;
 			} else {
+
 				diff = runDistance - translate - maxTranslate;
 			}
 
@@ -341,7 +699,7 @@ var MAX_HOUR = 23;
 				duration = this._options.rollbackDuration;
 				runDistance = direction === DIREACTION_DOWN ? -translate : -translate - maxTranslate;
 				//alert(runDistance);
-				if (translate > minTranslate || translate < -maxTranslate) {
+				if (translate > 0 || translate < -maxTranslate) {
 					easeFn = easing.easeInBack;
 				} else {
 					easeFn = easing.easeOutBack;
@@ -364,8 +722,11 @@ var MAX_HOUR = 23;
 
 			this._wheelRun($wheel, $items, runOption, callback);
 
-		},
+		}
+		,
 		_wheelRun: function ($wheel, $items, option, callback) {
+			var me = this;
+
 			var type = option.type || 'normal';
 			var direction = option.direction || DIREACTION_UP;
 			var runDistance = option.runDistance;
@@ -375,77 +736,52 @@ var MAX_HOUR = 23;
 
 			var steplen = this._options.step.len;
 			var stepdeg = this._options.step.deg;
-			//var yChange = runStep * steplen;
-			//if (direction === DIREACTION_UP) {
-			//	yChange = -yChange;
-			//}
+
 			var degChange = runDistance * stepdeg / steplen;
 
-			//var duration = this._options.swipeDuration;
-
-			var me = this;
 			var yTranslate = $wheel.data('tmpYTranslate');
 
 			$wheel.data('isRunning', true);
 
-			var begin = $wheel.data('begin');
-			var end = $wheel.data('end');
-
 			var timeline = new Timeline();
 			timeline.onenterframe = function (time) {
 
-				var timePercent = Math.min(1, time / duration);
-
 				var needStop = $wheel.data('needStop');
+				if (needStop) {
+					$wheel.data('needStop', false).
+						data('isRunning', false);
+					this.stop();
+					return;
+				}
+				var timePercent = Math.min(1, time / duration);
 				var timeup = timePercent === 1;
 				//stop
-				if (timeup || needStop) {
+				if (timeup) {
 					$items.each(function () {
-						var deg;
-						if (timeup) {
-							deg = $(this).data('deg') + degChange;
-
-						} else {
-							deg = $(this).data('tmpdeg');
-						}
+						var deg = $(this).data('deg') + degChange;
 						deg = Math.round(deg / stepdeg) * stepdeg;
-						$(this).data('deg', deg)
-							.data('tmpdeg', deg);
+						$(this).data('tmpdeg', deg);
 						var cssValue = me._getCssByDeg(deg, type);
 						me._reSetCss($(this), cssValue);
 					});
-					if (needStop) {
-						$wheel.data('needStop', false);
-					}
-					if (timeup) {
-						translate = yTranslate + runDistance;
-						callback && callback();
-					} else {
-						translate = $wheel.data('tmpYTranslate');
-					}
+
+					var translate = yTranslate + runDistance;
 					translate = Math.round(translate / steplen) * steplen;
-					//var hasruned = Math.min(1, runPercent) * runStep;
-					//var current = $wheel.data('current');
-					//if (direction === DIREACTION_UP) {
-					//	current = Math.min(current + hasruned, end);
-					//} else {
-					//	current = Math.max(current - hasruned, begin);
-					//}
-					
+
 					var translateCss = {};
 					translateCss[me.transformKey] = 'translateY(' + translate + 'px)';
 					$wheel.data('isRunning', false)
 						//.data('current', current)
-						.data('yTranslate', translate)
+						//.data('yTranslate', translate)
 						.data('tmpYTranslate', translate)
 						.css(translateCss);
 
 					this.stop();
-
+					callback && callback();
 					return;
 				}
 
-				var runPercent;
+				var runPercent = timePercent;
 
 				if (easeFn) {
 					runPercent = easeFn(timePercent, duration * timePercent, 0, 1, duration, easeExtra);
@@ -463,6 +799,7 @@ var MAX_HOUR = 23;
 					var cssValue = me._getCssByDeg(deg, type);
 					me._reSetCss($(this), cssValue);
 				});
+
 				var translate;
 				if (runPercent > 1) {
 					var extra = (runPercent - 1) * steplen;
@@ -470,13 +807,33 @@ var MAX_HOUR = 23;
 				} else {
 					translate = yTranslate + runDistance * runPercent;
 				}
+
 				var translateCss = {};
 				translateCss[me.transformKey] = 'translateY(' + translate + 'px)';
 				$wheel.css(translateCss)
 					.data('tmpYTranslate', translate);
-
 			};
 			timeline.start();
+		},
+		_reSetCss: function ($el, cssValue) {
+			$el[0].style.cssText = '';
+			$el.css(cssValue);
+		},
+		_getTargetTranslate: function (translate, maxTranslate) {
+			var steplen = this._options.step.len;
+			var targetTranslate;
+
+			if (translate > 0) {
+				targetTranslate = 0;
+			} else if (translate < -maxTranslate) {
+				targetTranslate = -maxTranslate;
+			} else {
+				if (translate % steplen === 0)
+					return translate;
+				targetTranslate = Math.floor(translate / steplen) * steplen + ( Math.abs(translate % steplen) <= 10 ? steplen : 0);
+			}
+
+			return targetTranslate;
 		},
 		_getCssByDeg: function (deg, type) {
 			var cssValue = {};
@@ -511,9 +868,19 @@ var MAX_HOUR = 23;
 
 			return cssValue;
 		},
-		_reSetCss: function ($el, cssValue) {
-			$el[0].style.cssText = '';
-			$el.css(cssValue);
+		_getCurrent: function ($wheel, translate) {
+			var begin = $wheel.data('begin');
+			var end = $wheel.data('end');
+			var steplen = this._options.step.len;
+
+			var current = Math.max(0, Math.min(Math.round(-translate / steplen) + begin, end));
+
+			return current;
+		},
+		_getRunStepBySwipe: function (distance) {
+			var steplen = this._options.step.len;
+
+			return (Math.floor(distance / steplen) + (distance % steplen < 10 ? 0 : 1)) * 4;
 		},
 		_getEaseExtraByDiff: function (diff) {
 			return diff * 0.05;
