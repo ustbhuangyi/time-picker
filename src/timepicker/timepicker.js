@@ -43,7 +43,11 @@ var DIREACTION_DOWN = 'down';
 			},
 			delay: date.MINUTE_TIMESTAMP * 15,
 			selectTime: +new Date,
-			rate: 0.4,
+			rate: {
+				translateY: 0.4,
+				translateX: 0.1,
+				skewX: 0.1
+			},
 			step: {
 				len: 20,
 				deg: 25
@@ -127,8 +131,8 @@ var DIREACTION_DOWN = 'down';
 			this.$daymirroritems = $(strTpl).appendTo(this.$daymirror);
 
 			this.$day.data('current', current);
-			this._initWheel(this.$day, this.$dayitems, current, begin, end, 'normal');
-			this._initWheel(this.$daymirror, this.$daymirroritems, current, begin, end, 'mirror');
+			this._initWheel(this.$day, this.$dayitems, current, begin, end, 'normal.left');
+			this._initWheel(this.$daymirror, this.$daymirroritems, current, begin, end, 'mirror.left');
 
 		},
 		_initHours: function () {
@@ -166,8 +170,8 @@ var DIREACTION_DOWN = 'down';
 			this.$hourmirroritems = $(strTpl).appendTo(this.$hourmirror);
 
 			this.$hour.data('current', current);
-			this._initWheel(this.$hour, this.$houritems, current, begin, end, 'normal');
-			this._initWheel(this.$hourmirror, this.$hourmirroritems, current, begin, end, 'mirror');
+			this._initWheel(this.$hour, this.$houritems, current, begin, end, 'normal.middle');
+			this._initWheel(this.$hourmirror, this.$hourmirroritems, current, begin, end, 'mirror.middle');
 		},
 		_initMinutes: function () {
 			this.minutes = this._genMinutes();
@@ -205,8 +209,8 @@ var DIREACTION_DOWN = 'down';
 
 			this.$minute.data('current', current);
 
-			this._initWheel(this.$minute, this.$minuteitems, current, begin, end, 'normal');
-			this._initWheel(this.$minutemirror, this.$minutemirroritems, current, begin, end, 'mirror');
+			this._initWheel(this.$minute, this.$minuteitems, current, begin, end, 'normal.right');
+			this._initWheel(this.$minutemirror, this.$minutemirroritems, current, begin, end, 'mirror.right');
 
 		},
 		_initWheel: function ($wheel, $items, current, begin, end, type) {
@@ -297,11 +301,11 @@ var DIREACTION_DOWN = 'down';
 
 				me._wheelMove(me.$day, me.$dayitems, {
 					distance: distance,
-					type: 'normal'
+					type: 'normal.left'
 				});
 				me._wheelMove(me.$daymirror, me.$daymirroritems, {
 					distance: distance,
-					type: 'mirror'
+					type: 'mirror.left'
 				});
 			}
 
@@ -322,13 +326,13 @@ var DIREACTION_DOWN = 'down';
 						direction: direction,
 						runStep: runStep,
 						delta: delta,
-						type: 'normal'
+						type: 'normal.left'
 					});
 					me._wheelSwipe(me.$daymirror, me.$daymirroritems, {
 						direction: direction,
 						runStep: runStep,
 						delta: delta,
-						type: 'mirror'
+						type: 'mirror.left'
 					});
 				}
 				else {
@@ -336,10 +340,10 @@ var DIREACTION_DOWN = 'down';
 					timer = setTimeout(function () {
 						if (!me.$day.data('isRunning')) {
 							me._wheelAdjust(me.$day, me.$dayitems, {
-								type: 'normal'
+								type: 'normal.left'
 							});
 							me._wheelAdjust(me.$daymirror, me.$daymirroritems, {
-								type: 'mirror'
+								type: 'mirror.left'
 							});
 						}
 					}, 20);
@@ -399,11 +403,11 @@ var DIREACTION_DOWN = 'down';
 
 				me._wheelMove(me.$hour, me.$houritems, {
 					distance: distance,
-					type: 'normal'
+					type: 'normal.middle'
 				});
 				me._wheelMove(me.$hourmirror, me.$hourmirroritems, {
 					distance: distance,
-					type: 'mirror'
+					type: 'mirror.middle'
 				});
 			}
 
@@ -424,13 +428,13 @@ var DIREACTION_DOWN = 'down';
 						direction: direction,
 						runStep: runStep,
 						delta: delta,
-						type: 'normal'
+						type: 'normal.middle'
 					});
 					me._wheelSwipe(me.$hourmirror, me.$hourmirroritems, {
 						direction: direction,
 						runStep: runStep,
 						delta: delta,
-						type: 'mirror'
+						type: 'mirror.middle'
 					});
 				}
 				else {
@@ -438,10 +442,10 @@ var DIREACTION_DOWN = 'down';
 					timer = setTimeout(function () {
 						if (!me.$hour.data('isRunning')) {
 							me._wheelAdjust(me.$hour, me.$houritems, {
-								type: 'normal'
+								type: 'normal.middle'
 							});
 							me._wheelAdjust(me.$hourmirror, me.$hourmirroritems, {
-								type: 'mirror'
+								type: 'mirror.middle'
 							});
 						}
 					}, 20);
@@ -501,11 +505,11 @@ var DIREACTION_DOWN = 'down';
 
 				me._wheelMove(me.$minute, me.$minuteitems, {
 					distance: distance,
-					type: 'normal'
+					type: 'normal.right'
 				});
 				me._wheelMove(me.$minutemirror, me.$minutemirroritems, {
 					distance: distance,
-					type: 'mirror'
+					type: 'mirror.right'
 				});
 			}
 
@@ -526,13 +530,13 @@ var DIREACTION_DOWN = 'down';
 						direction: direction,
 						runStep: runStep,
 						delta: delta,
-						type: 'normal'
+						type: 'normal.right'
 					});
 					me._wheelSwipe(me.$minutemirror, me.$minutemirroritems, {
 						direction: direction,
 						runStep: runStep,
 						delta: delta,
-						type: 'mirror'
+						type: 'mirror.right'
 					});
 				}
 				else {
@@ -540,10 +544,10 @@ var DIREACTION_DOWN = 'down';
 					timer = setTimeout(function () {
 						if (!me.$minute.data('isRunning')) {
 							me._wheelAdjust(me.$minute, me.$minuteitems, {
-								type: 'normal'
+								type: 'normal.right'
 							});
 							me._wheelAdjust(me.$minutemirror, me.$minutemirroritems, {
-								type: 'mirror'
+								type: 'mirror.right'
 							});
 						}
 					}, 20);
@@ -552,7 +556,7 @@ var DIREACTION_DOWN = 'down';
 		},
 		_wheelMove: function ($wheel, $items, option) {
 
-			var type = option.type || 'normal';
+			var type = option.type;
 			//var direction = option.direction;
 			var distance = option.distance;
 
@@ -598,7 +602,7 @@ var DIREACTION_DOWN = 'down';
 		},
 		_wheelAdjust: function ($wheel, $items, option, callback) {
 
-			var type = option.type || 'normal';
+			var type = option.type;
 
 			var translate = $wheel.data('tmpYTranslate');
 
@@ -654,7 +658,7 @@ var DIREACTION_DOWN = 'down';
 		},
 		_wheelSwipe: function ($wheel, $items, option, callback) {
 
-			var type = option.type || 'normal';
+			var type = option.type;
 
 			var direction = option.direction;
 			var runStep = option.runStep;
@@ -722,12 +726,11 @@ var DIREACTION_DOWN = 'down';
 
 			this._wheelRun($wheel, $items, runOption, callback);
 
-		}
-		,
+		},
 		_wheelRun: function ($wheel, $items, option, callback) {
 			var me = this;
 
-			var type = option.type || 'normal';
+			var type = option.type;
 			var direction = option.direction || DIREACTION_UP;
 			var runDistance = option.runDistance;
 			var duration = option.duration;
@@ -840,18 +843,33 @@ var DIREACTION_DOWN = 'down';
 
 			var yTranslate;
 
+			var rateConf = this._options.rate;
+
 			if (Math.abs(deg) <= 90) {
-				yTranslate = deg * this._options.rate + 'px';
+				yTranslate = deg * rateConf.translateY + 'px';
 				cssValue['visibility'] = 'visible';
 			} else {
 				cssValue['visibility'] = 'hidden';
 			}
 
-			cssValue[this.transformKey] = 'rotateX(' + deg + 'deg) translateY(' + yTranslate + ')';
+			var transform = 'rotateX(' + deg + 'deg) translateY(' + yTranslate + ')';
+
+			if (/left/.test(type)) {
+				var skewX = deg * rateConf.skewX;
+				var xTranslate = Math.abs(deg) * rateConf.translateX;
+				transform += ' skewX(' + skewX + 'deg) translateX(' + xTranslate + 'px)';
+			} else if (/right/.test(type)) {
+				var skewX = -deg * rateConf.skewX;
+				var xTranslate = -Math.abs(deg) * rateConf.translateX;
+				transform += ' skewX(' + skewX + 'deg) translateX(' + xTranslate + 'px)';
+			}
+
+
+			cssValue[this.transformKey] = transform;
 
 			var color;
 
-			if (type === 'mirror') {
+			if (/mirror/.test(type)) {
 				color = '#000';
 			} else {
 				if (deg <= 30 && deg >= -30) {
@@ -867,7 +885,8 @@ var DIREACTION_DOWN = 'down';
 			cssValue['color'] = color;
 
 			return cssValue;
-		},
+		}
+		,
 		_getCurrent: function ($wheel, translate) {
 			var begin = $wheel.data('begin');
 			var end = $wheel.data('end');
@@ -876,12 +895,14 @@ var DIREACTION_DOWN = 'down';
 			var current = Math.max(0, Math.min(Math.round(-translate / steplen) + begin, end));
 
 			return current;
-		},
+		}
+		,
 		_getRunStepBySwipe: function (distance) {
 			var steplen = this._options.step.len;
 
 			return (Math.floor(distance / steplen) + (distance % steplen < 10 ? 0 : 1)) * 4;
-		},
+		}
+		,
 		_getEaseExtraByDiff: function (diff) {
 			return diff * 0.05;
 		}

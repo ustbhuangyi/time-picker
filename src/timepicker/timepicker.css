@@ -23,13 +23,13 @@
     display: flex;
 }
 
-.timepicker .wheel{
+.timepicker .wheel {
     display: -ms-flexbox;
     display: -webkit-flex;
     display: flex;
 }
 
-.timepicker .day,.timepicker .hour, .timepicker .minute{
+.timepicker .day, .timepicker .hour, .timepicker .minute {
     -ms-flex: 1 1 0.000000001px;
     -webkit-flex: 1;
     flex: 1;
@@ -39,14 +39,25 @@
     padding: 70px 0;
 }
 
-.timepicker .daymirror,.timepicker .hourmirror, .timepicker .minutemirror{
+.timepicker .day .item, .timepicker .daymirror .item {
+    position: relative;
+    left: 16%;
+}
+
+
+.timepicker .minute .item, .timepicker .minutemirror .item {
+    position: relative;
+    left: -16%;
+}
+
+.timepicker .daymirror, .timepicker .hourmirror, .timepicker .minutemirror {
     -ms-flex: 1 1 0.000000001px;
     -webkit-flex: 1;
     flex: 1;
     -webkit-flex-basis: 0.000000001px;
     flex-basis: 0.000000001px;
     position: relative;
-    top:4px;
+    top: 4px;
     height: 20px;
     line-height: 20px;
     font-size: 2.2rem;
