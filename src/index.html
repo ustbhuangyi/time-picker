@@ -9,14 +9,35 @@
   <title>time picker</title>
   <link rel="stylesheet" href="lib/reset/reset.css">
   <link rel="stylesheet" href="timepicker/timepicker.css">
+  <style>
+    .subscribe {
+      width: 200px;
+      height: 40px;
+      line-height: 40px;
+      margin: 0 auto;
+      text-align: center;
+      border: 1px solid #d7d7d7;
+      border-radius: 5px;
+      color: #ff8a01;
+      background: #fff;
+      font-size: 2rem;
+    }
+
+    .subscribe .text {
+      vertical-align: middle;
+    }
+
+  </style>
 </head>
 <body>
-<div id="subscribe"></div>
+<div id="subscribe" class="subscribe">
+  <span class="text">9月8日 12:00</span>
+</div>
 <script src="lib/lib.js"></script>
 <script src="timepicker/timepicker.js"></script>
 <script>
   $('#subscribe').timePicker({
-    currentHour:5
+    currentHour: 5
   });
 </script>
 </body>
