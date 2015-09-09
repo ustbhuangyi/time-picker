@@ -991,10 +991,17 @@ var DIREACTION_DOWN = 'down';
 					var translate = yTranslate + runDistance;
 					translate = Math.round(translate / steplen) * steplen;
 
+					var begin = $wheel.data('begin');
+					var end = $wheel.data('end');
+
+					var maxTranslate = (end - begin) * steplen;
+
+					//make sure translate valid
+					translate = Math.min(0, Math.max(-maxTranslate, translate));
+
 					var translateCss = {};
 					translateCss[me.transformKey] = 'translateY(' + translate + 'px)';
 					$wheel.data('isRunning', false)
-						//.data('current', current)
 						.data('yTranslate', translate)
 						.data('tmpYTranslate', translate)
 						.css(translateCss);
