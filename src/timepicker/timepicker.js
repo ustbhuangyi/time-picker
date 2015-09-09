@@ -13,6 +13,11 @@ var DIREACTION_DOWN = 'down';
 	gmu.define('timePicker', {
 		options: {
 			listTpl: '<div class="timepicker">' +
+			'<div class="panel panel-hook">' +
+			'<div class="choose">' +
+			'<span class="cancel cancel-hook">取消</span>' +
+			'<span class="confirm confirm-hook">确定</span>' +
+			'</div>' +
 			'<div class="wheel">' +
 			'<ul class="day day-hook"></ul>' +
 			'<ul class="hour hour-hook"></ul>' +
@@ -22,6 +27,7 @@ var DIREACTION_DOWN = 'down';
 			'<ul class="daymirror daymirror-hook"></ul>' +
 			'<ul class="hourmirror hourmirror-hook"></ul>' +
 			'<ul class="minutemirror minutemirror-hook"></ul>' +
+			'</div>' +
 			'</div>' +
 			'</div>',
 			itemTpl: '<li data-val="#{val}" data-index="#{index}" class="item #{current}">#{text}</li>',
@@ -56,10 +62,13 @@ var DIREACTION_DOWN = 'down';
 			threshold: 15,
 			swipeDuration: 2500,
 			swipeDefaultStep: 4,
-			rollbackDuration: 1000
+			rollbackDuration: 1000,
+			showCls: 'show'
 		},
 		_create: function () {
 			this.$list = $(this._options.listTpl).appendTo($(document.body));
+
+			this.$panel = $('.panel-hook', this.$list);
 
 			this.$day = $('.day-hook', this.$list);
 			this.$daymirror = $('.daymirror-hook', this.$list);
@@ -69,6 +78,11 @@ var DIREACTION_DOWN = 'down';
 
 			this.$minute = $('.minute-hook', this.$list);
 			this.$minutemirror = $('.minutemirror-hook', this.$list);
+
+			this.$cancel = $('.cancel-hook', this.$list);
+			this.$confirm = $('.confirm-hook', this.$list);
+
+			this.$datetext = $('.text-hook', this.$el);
 
 			this.transformKey = $.fx.cssPrefix + 'transform';
 
@@ -115,7 +129,7 @@ var DIREACTION_DOWN = 'down';
 			for (var i = minuteConf.min; i <= minuteConf.max; i += minuteConf.step) {
 				minutes.push({
 					val: i,
-					text: i + '分'
+					text: this._formatNum(i) + '分'
 				});
 			}
 			return minutes;
@@ -208,6 +222,7 @@ var DIREACTION_DOWN = 'down';
 			var days = [];
 			var dayConf = this._options.day;
 			var zeroTimestamp = +date.getZeroDate(this.now);
+
 			var format = dayConf.format;
 			for (var i = 0; i < dayConf.len; i += dayConf.step) {
 				var timestamp = zeroTimestamp + i * date.DAY_TIMESTAMP;
@@ -259,7 +274,6 @@ var DIREACTION_DOWN = 'down';
 			$wheel.css(translateCss)
 				.data('yTranslate', yTranslate)
 				.data('tmpYTranslate', '')
-				.data('needStop', false)
 				.data('begin', begin)
 				.data('end', end);
 			var me = this;
@@ -276,7 +290,7 @@ var DIREACTION_DOWN = 'down';
 		_bindEvent: function () {
 
 			this.$list.on('touchstart', function (e) {
-				return false;
+				e.preventDefault();
 			});
 
 			this._bindMinuteEvent();
@@ -284,6 +298,20 @@ var DIREACTION_DOWN = 'down';
 			this._bindHourEvent();
 
 			this._bindDayEvent();
+
+			var me = this;
+			this.$el.on('touchstart', function () {
+				me.show();
+			});
+
+			this.$cancel.on('touchstart', function () {
+				me.hide();
+			});
+
+			this.$confirm.on('touchstart', function () {
+				me._confirm();
+				me.hide();
+			});
 
 		},
 		_bindMinuteEvent: function () {
@@ -311,6 +339,9 @@ var DIREACTION_DOWN = 'down';
 				clearTimeout(timer);
 				if (me.$minute.data('isRunning')) {
 					me.$minute.data('needStop', true);
+				}
+
+				if (me.$minutemirror.data('isRunning')) {
 					me.$minutemirror.data('needStop', true);
 				}
 
@@ -320,9 +351,11 @@ var DIREACTION_DOWN = 'down';
 					me.$minuteitems.each(function () {
 						$(this).data('deg', $(this).data('tmpdeg'));
 					});
+				}
+
+				if (me.$minutemirror.data('tmpYTranslate') || me.$minutemirror.data('tmpYTranslate') === 0) {
 
 					me.$minutemirror.data('yTranslate', me.$minutemirror.data('tmpYTranslate'));
-
 					me.$minutemirroritems.each(function () {
 						$(this).data('deg', $(this).data('tmpdeg'));
 					});
@@ -402,8 +435,9 @@ var DIREACTION_DOWN = 'down';
 				} else {
 					//alert(1);
 					me.one('minute.stop', function (e, currentMinute) {
-
-						//me.$minutemirror.data('needStop', true);
+						if (me.$minutemirror.data('isRunning')) {
+							me.$minutemirror.data('needStop', true);
+						}
 						reFillByDay(currentDay, currentMinute);
 					});
 				}
@@ -421,7 +455,9 @@ var DIREACTION_DOWN = 'down';
 						reFillByHour(currentHour, currentMinute, currentDay);
 					} else {
 						me.one('minute.stop', function (e, currentMinute) {
-							//me.$minutemirror.data('needStop', true);
+							if (me.$minutemirror.data('isRunning')) {
+								me.$minutemirror.data('needStop', true);
+							}
 							reFillByHour(currentHour, currentMinute, currentDay);
 						});
 					}
@@ -458,7 +494,7 @@ var DIREACTION_DOWN = 'down';
 					}
 				}
 
-				currentMinute = (currentMinute + begin) % me.minutes.length;
+				currentMinute = Math.min(end, currentMinute + begin);
 
 				me._fillMinutes(begin, end, currentMinute);
 			}
@@ -488,6 +524,9 @@ var DIREACTION_DOWN = 'down';
 				clearTimeout(timer);
 				if (me.$hour.data('isRunning')) {
 					me.$hour.data('needStop', true);
+				}
+
+				if (me.$hourmirror.data('isRunning')) {
 					me.$hourmirror.data('needStop', true);
 				}
 
@@ -497,9 +536,11 @@ var DIREACTION_DOWN = 'down';
 					me.$houritems.each(function () {
 						$(this).data('deg', $(this).data('tmpdeg'));
 					});
+				}
+
+				if (me.$hourmirror.data('tmpYTranslate') || me.$hourmirror.data('tmpYTranslate') === 0) {
 
 					me.$hourmirror.data('yTranslate', me.$hourmirror.data('tmpYTranslate'));
-
 					me.$hourmirroritems.each(function () {
 						$(this).data('deg', $(this).data('tmpdeg'));
 					});
@@ -578,7 +619,9 @@ var DIREACTION_DOWN = 'down';
 					reFillHours(currentDay, currentHour);
 				} else {
 					me.one('hour.stop', function (e, currentHour) {
-						me.$hourmirror.data('needStop', true);
+						if (me.$hourmirror.data('isRunning')) {
+							me.$hourmirror.data('needStop', true);
+						}
 						reFillHours(currentDay, currentHour);
 					})
 				}
@@ -593,7 +636,9 @@ var DIREACTION_DOWN = 'down';
 				} else {
 					begin = Math.ceil((me.now.getHours() + me.currentHourCarry) / hourConf.step) % me.hours.length;
 				}
-				currentHour = (currentHour + begin) % me.hours.length;
+				console.log('currentHour:' + currentHour);
+				console.log('begin:' + begin);
+				currentHour = Math.min(end, currentHour + begin);
 
 				me._fillHours(begin, end, currentHour)
 			}
@@ -623,6 +668,9 @@ var DIREACTION_DOWN = 'down';
 				clearTimeout(timer);
 				if (me.$day.data('isRunning')) {
 					me.$day.data('needStop', true);
+				}
+
+				if (me.$daymirror.data('isRunning')) {
 					me.$daymirror.data('needStop', true);
 				}
 
@@ -633,12 +681,14 @@ var DIREACTION_DOWN = 'down';
 						$(this).data('deg', $(this).data('tmpdeg'));
 					});
 
-					me.$daymirror.data('yTranslate', me.$daymirror.data('tmpYTranslate'));
+				}
 
+				if (me.$daymirror.data('tmpYTranslate') || me.$daymirror.data('tmpYTranslate') === 0) {
+
+					me.$daymirror.data('yTranslate', me.$daymirror.data('tmpYTranslate'));
 					me.$daymirroritems.each(function () {
 						$(this).data('deg', $(this).data('tmpdeg'));
 					});
-
 				}
 
 				event.preventDefault();
@@ -724,7 +774,7 @@ var DIREACTION_DOWN = 'down';
 
 			var tmpYTranslate = $wheel.data('tmpYTranslate');
 
-			if (tmpYTranslate >= 0 || tmpYTranslate <= -maxTranslate) {
+			if (tmpYTranslate && (tmpYTranslate >= 0 || tmpYTranslate <= -maxTranslate)) {
 				var diff;
 				if (tmpYTranslate >= 0) {
 					diff = -yTranslate;
@@ -1056,6 +1106,60 @@ var DIREACTION_DOWN = 'down';
 		},
 		_getEaseExtraByDiff: function (diff) {
 			return diff * 0.05;
+		},
+		_formatNum: function (num) {
+			return (('' + num).length > 1 ? num : ('0' + num))
+		},
+		_confirm: function () {
+			var currentDay = this.$day.data('current');
+			var $selectDay = this.$dayitems.eq(currentDay);
+
+			var currentHour = this.$hour.data('current');
+			var $selectHour = this.$houritems.eq(currentHour);
+
+			var currentMinute = this.$minute.data('current');
+			var $selectMinute = this.$minuteitems.eq(currentMinute);
+
+			var showDay = $selectDay.text();
+			var showHour = this._formatNum($selectHour.data('val'));
+			var showMinute = this._formatNum($selectMinute.data('val'));
+
+			var showDate = showDay + ' ' + showHour + ':' + showMinute;
+
+			var currentDate = $selectDay.data('val') +
+				$selectHour.data('val') * date.HOUR_TIMESTAMP +
+				$selectMinute.data('val') * date.MINUTE_TIMESTAMP;
+
+			this.$el.data('currentDate', currentDate);
+			this.$datetext.text(showDate);
+
+			this.trigger('date.confirm', {
+				text: showDate,
+				val: currentDate
+			});
+		},
+		show: function () {
+			this.$list.show();
+			var showCls = this._options.showCls;
+
+			var me = this;
+			setTimeout(function () {
+				me.$list.addClass(showCls);
+				me.$panel.addClass(showCls);
+			}, 0);
+
+
+		},
+		hide: function () {
+			var showCls = this._options.showCls;
+			this.$list.removeClass(showCls);
+			this.$panel.removeClass(showCls);
+
+			var me = this;
+			setTimeout(function () {
+				me.$list.hide();
+			}, 500);
+
 		}
 	});
 })

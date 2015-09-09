@@ -23,12 +23,16 @@ function format(date, fmt) {
 }
 
 function getZeroDate(date) {
-	return new Date(date - (+date % DAY_TIMESTAMP));
+	var year = date.getFullYear();
+	var month = date.getMonth() + 1;
+	var day = date.getDate();
+	return new Date(year + '/' + month + '/' + day + ' 00:00:00');
 }
 
 module.exports = {
 	format: format,
 	getZeroDate: getZeroDate,
 	DAY_TIMESTAMP: DAY_TIMESTAMP,
+	HOUR_TIMESTAMP: HOUR_TIMESTAMP,
 	MINUTE_TIMESTAMP: MINUTE_TIMESTAMP
 };
