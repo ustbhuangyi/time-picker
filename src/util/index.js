@@ -9,3 +9,5 @@ exports.easing = require('./easing');
 exports.date = require('./date');
 
 exports.Timeline = require('./timeline');
+
+exports.log = require('./log');

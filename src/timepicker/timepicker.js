@@ -4,6 +4,7 @@ var format = _.format;
 var easing = _.easing;
 var Timeline = _.Timeline;
 var date = _.date;
+var log = _.log;
 
 var DIREACTION_UP = 'up';
 var DIREACTION_DOWN = 'down';
@@ -60,6 +61,7 @@ var DIREACTION_DOWN = 'down';
 			},
 			velocity: 300,
 			threshold: 15,
+			moveThreshold: 5,
 			swipeDuration: 2500,
 			swipeDefaultStep: 4,
 			rollbackDuration: 1000,
@@ -161,8 +163,8 @@ var DIREACTION_DOWN = 'down';
 		_initHours: function () {
 			this.hours = this._genHours();
 			var hourConf = this._options.hour;
-			var current = Math.ceil((this.currentDate.getHours() + this.currentHourCarry) / hourConf.step) % this.hours.length;
-			var begin = Math.ceil((this.now.getHours() + this.beginHourCarry ) / hourConf.step) % this.hours.length;
+			var current = Math.ceil(this.currentDate.getHours() / hourConf.step) % this.hours.length;
+			var begin = Math.ceil(this.now.getHours() / hourConf.step) % this.hours.length;
 
 			if (this.currentHourCarry && this.currentDate.getHours() === 0) {
 				this.currentDayCarry = 1;
@@ -331,6 +333,7 @@ var DIREACTION_DOWN = 'down';
 				on('touchend', onTouchEnd);
 
 			function onTouchStart(e) {
+
 				firstTouch = e.touches[0];
 				touch.y1 = firstTouch.pageY;
 
@@ -366,6 +369,7 @@ var DIREACTION_DOWN = 'down';
 			}
 
 			function onTouchMove(e) {
+
 				firstTouch = e.touches[0];
 				touch.y2 = firstTouch.pageY;
 				var distance = touch.y2 - touch.y1;
@@ -381,6 +385,7 @@ var DIREACTION_DOWN = 'down';
 			}
 
 			function onTouchEnd(e) {
+
 				touch.y2 = firstTouch.pageY;
 
 				var duration = +new Date - start;
@@ -419,9 +424,12 @@ var DIREACTION_DOWN = 'down';
 						}
 					}, 20);
 				}
+
+
 			}
 
 			function onWheelStop(current) {
+
 				me.$minute.data('current', current);
 				me.trigger('minute.stop', current);
 			}
@@ -516,6 +524,7 @@ var DIREACTION_DOWN = 'down';
 				on('touchend', onTouchEnd);
 
 			function onTouchStart(e) {
+
 				firstTouch = e.touches[0];
 				touch.y1 = firstTouch.pageY;
 
@@ -551,6 +560,7 @@ var DIREACTION_DOWN = 'down';
 			}
 
 			function onTouchMove(e) {
+
 				firstTouch = e.touches[0];
 				touch.y2 = firstTouch.pageY;
 				var distance = touch.y2 - touch.y1;
@@ -604,6 +614,7 @@ var DIREACTION_DOWN = 'down';
 						}
 					}, 20);
 				}
+
 			}
 
 			function onWheelStop(current) {
@@ -636,8 +647,7 @@ var DIREACTION_DOWN = 'down';
 				} else {
 					begin = Math.ceil((me.now.getHours() + me.currentHourCarry) / hourConf.step) % me.hours.length;
 				}
-				console.log('currentHour:' + currentHour);
-				console.log('begin:' + begin);
+
 				currentHour = Math.min(end, currentHour + begin);
 
 				me._fillHours(begin, end, currentHour)
@@ -660,6 +670,7 @@ var DIREACTION_DOWN = 'down';
 				on('touchend', onTouchEnd);
 
 			function onTouchStart(e) {
+
 				firstTouch = e.touches[0];
 				touch.y1 = firstTouch.pageY;
 
@@ -749,6 +760,7 @@ var DIREACTION_DOWN = 'down';
 						}
 					}, 20);
 				}
+
 			}
 
 			function onWheelStop(current) {
@@ -767,7 +779,7 @@ var DIREACTION_DOWN = 'down';
 
 			var begin = $wheel.data('begin');
 			var end = $wheel.data('end');
-			//var minTranslate = begin * steplen;
+
 			var maxTranslate = (end - begin) * steplen;
 
 			var yTranslate = $wheel.data('yTranslate');
@@ -786,6 +798,7 @@ var DIREACTION_DOWN = 'down';
 			}
 
 			var translate = yTranslate + distance;
+
 			var translateCss = {};
 			translateCss[this.transformKey] = 'translateY(' + translate + 'px)';
 			$wheel.css(translateCss);
@@ -796,6 +809,7 @@ var DIREACTION_DOWN = 'down';
 			var me = this;
 			$items.each(function () {
 				var deg = $(this).data('deg') + degChange;
+
 				$(this).data('tmpdeg', deg);
 				var cssValue = me._getCssByDeg(deg, type);
 				me._reSetCss($(this), cssValue);
@@ -819,7 +833,6 @@ var DIREACTION_DOWN = 'down';
 			var maxTranslate = (end - begin) * steplen;
 
 			var targetTranslate;
-
 
 			if (translate > 0) {
 				targetTranslate = 0;
@@ -882,6 +895,7 @@ var DIREACTION_DOWN = 'down';
 			var maxTranslate = (end - begin) * steplen;
 
 			var targetTranslate = this._getTargetTranslate($wheel.data('yTranslate'), maxTranslate);
+
 			var targetDiff = Math.abs(targetTranslate - $wheel.data('yTranslate'));
 
 			runDistance += targetDiff;
@@ -906,13 +920,14 @@ var DIREACTION_DOWN = 'down';
 			if (diff > 0) {
 				duration = this._options.rollbackDuration;
 				runDistance = direction === DIREACTION_DOWN ? -translate : -translate - maxTranslate;
-				//alert(runDistance);
+
 				if (translate > 0 || translate < -maxTranslate) {
 					easeFn = easing.easeInBack;
 				} else {
 					easeFn = easing.easeOutBack;
 				}
 				easeExtra = this._getEaseExtraByDiff(diff);
+
 			} else {
 				duration = this._options.swipeDuration;
 				runDistance = direction === DIREACTION_DOWN ? runDistance : -runDistance;
@@ -964,13 +979,14 @@ var DIREACTION_DOWN = 'down';
 				var timeup = timePercent === 1;
 				//stop
 				if (timeup) {
-					$items.each(function () {
-						var deg = $(this).data('deg') + degChange;
-						deg = Math.round(deg / stepdeg) * stepdeg;
-						$(this).data('tmpdeg', deg);
-						var cssValue = me._getCssByDeg(deg, type);
-						me._reSetCss($(this), cssValue);
-					});
+					//$items.each(function () {
+					//	var deg = $(this).data('deg') + degChange;
+					//	deg = Math.round(deg / stepdeg) * stepdeg;
+					//	$(this).data('tmpdeg', deg)
+					//		.data('deg', deg);
+					//	var cssValue = me._getCssByDeg(deg, type);
+					//	me._reSetCss($(this), cssValue);
+					//});
 
 					var translate = yTranslate + runDistance;
 					translate = Math.round(translate / steplen) * steplen;
@@ -979,9 +995,21 @@ var DIREACTION_DOWN = 'down';
 					translateCss[me.transformKey] = 'translateY(' + translate + 'px)';
 					$wheel.data('isRunning', false)
 						//.data('current', current)
-						//.data('yTranslate', translate)
+						.data('yTranslate', translate)
 						.data('tmpYTranslate', translate)
 						.css(translateCss);
+
+					var current = -translate / steplen + $wheel.data('begin');
+
+					$items.each(function () {
+						var diff = $(this).data('index') - current;
+						var deg = diff * me._options.step.deg;
+						$(this).data('deg', deg)
+							.data('tmpdeg', deg);
+
+						var cssValue = me._getCssByDeg(deg, type);
+						me._reSetCss($(this), cssValue);
+					});
 
 					this.stop();
 					callback && callback(Math.abs(translate / steplen));
@@ -1105,7 +1133,7 @@ var DIREACTION_DOWN = 'down';
 			return (Math.floor(distance / steplen) + (distance % steplen < 10 ? 0 : 1)) * 4;
 		},
 		_getEaseExtraByDiff: function (diff) {
-			return diff * 0.05;
+			return Math.min(5, diff * 0.05);
 		},
 		_formatNum: function (num) {
 			return (('' + num).length > 1 ? num : ('0' + num))
