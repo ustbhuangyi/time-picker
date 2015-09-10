@@ -1,0 +1,120 @@
+.timepicker {
+    display: none;
+    position: fixed;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    text-align: center;
+    background: rgba(0, 0, 0, 0);
+
+    transition: all 0.5s;
+    -webkit-transition: all 0.5s;
+}
+
+.timepicker.show{
+    background: rgba(0, 0, 0, 0.7);
+}
+
+.timepicker .panel {
+
+    position: absolute;
+    width: 100%;
+    bottom: 0;
+    transform: translateY(201px);
+    -webkit-transform: translateY(201px);
+
+    transition: all 0.5s;
+    -webkit-transition: all 0.5s;
+}
+
+.timepicker .panel.show {
+
+    transform: translateY(0px);
+    -webkit-transform: translateY(0px); 
+}
+
+.timepicker .choose {
+    position: relative;
+    z-index: 20;
+    height: 40px;
+    line-height: 40px;
+    background: #f0f0f0;
+    border-bottom: 1px solid #eaeaea;
+    font-size: 1.6rem;
+}
+
+.timepicker .cancel, .timepicker .confirm {
+    position: absolute;
+    padding: 0 10px;
+}
+
+.timepicker .cancel {
+
+    left: 20px;
+    color: #999;
+}
+
+.timepicker .confirm {
+
+    right: 20px;
+    color: #ff8a01;
+}
+
+.timepicker .center, .timepicker .wheel {
+
+    display: -ms-flexbox;
+    display: -webkit-flex;
+    display: flex;
+}
+
+.timepicker .center {
+    position: absolute;
+    width: 100%;
+    bottom: 66px;
+    height: 28px;
+    z-index: 10;
+    overflow: hidden;
+    background: -webkit-linear-gradient(top, #f3f4f6, #f2f3f5);
+    border-top: 1px solid #ff8a01;
+    border-bottom: 1px solid #ff8a01;
+}
+
+.timepicker .wheel {
+    bottom: 0;
+    height: 160px;
+    background: -webkit-linear-gradient(top, #f6f6f7, #eff0f4);
+}
+
+.timepicker ul {
+    -ms-flex: 1 1 0.000000001px;
+    -webkit-flex: 1;
+    flex: 1;
+    -webkit-flex-basis: 0.000000001px;
+    flex-basis: 0.000000001px;
+    line-height: 20px;
+}
+
+.timepicker .day, .timepicker .hour, .timepicker .minute {
+    font-size: 2rem;
+    padding-top: 70px;
+}
+
+.timepicker .daymirror, .timepicker .hourmirror, .timepicker .minutemirror {
+    position: relative;
+    top: 4px;
+    height: 20px;
+    font-size: 2.2rem;
+}
+
+.timepicker .day .item, .timepicker .daymirror .item {
+    position: relative;
+    left: 16%;
+}
+
+.timepicker .minute .item, .timepicker .minutemirror .item {
+    position: relative;
+    left: -16%;
+}
+
+
