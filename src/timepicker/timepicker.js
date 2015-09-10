@@ -444,7 +444,7 @@ var DIREACTION_DOWN = 'down';
 					currentMinute = me.$minute.data('current');
 					reFillByDay(currentDay, currentMinute);
 				} else {
-					//alert(1);
+
 					me.one('minute.stop', function (e, currentMinute) {
 						if (me.$minutemirror.data('isRunning')) {
 							me.$minutemirror.data('needStop', true);
@@ -775,7 +775,7 @@ var DIREACTION_DOWN = 'down';
 		_wheelMove: function ($wheel, $items, option) {
 
 			var type = option.type;
-			//var direction = option.direction;
+
 			var distance = option.distance;
 
 			var steplen = this._options.step.len;
@@ -851,7 +851,7 @@ var DIREACTION_DOWN = 'down';
 					} else {
 						runDistance = Math.ceil((offsetY - centerOffset) / steplen) * steplen;
 					}
-					//var runDistance = Math.floor(offsetY / steplen) * steplen;
+
 					targetTranslate = Math.min(0, Math.max(-maxTranslate, -runDistance + translate));
 					duration = this._options.runDuration;
 				} else {
@@ -888,7 +888,7 @@ var DIREACTION_DOWN = 'down';
 			var direction = option.direction;
 			var runStep = option.runStep;
 			var delta = option.delta;
-			//var current = $wheel.data('current');
+
 			var translate = $wheel.data('tmpYTranslate');
 
 			if (!translate && translate !== 0)
