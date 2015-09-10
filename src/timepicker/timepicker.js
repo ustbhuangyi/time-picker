@@ -13,6 +13,7 @@ var DIREACTION_DOWN = 'down';
 (function (gmu, $, undefined) {
 	gmu.define('timePicker', {
 		options: {
+			inputTpl: '<span>#{placeHolder}</span>',
 			listTpl: '<div class="timepicker">' +
 			'<div class="panel panel-hook">' +
 			'<div class="choose">' +
@@ -32,6 +33,12 @@ var DIREACTION_DOWN = 'down';
 			'</div>' +
 			'</div>',
 			itemTpl: '<li data-val="#{val}" data-index="#{index}" class="item #{current}">#{text}</li>',
+			day: {
+				step: 1,
+				len: 7,
+				filter: ['今天', '明天', '后天'],
+				format: 'M月d日'
+			},
 			hour: {
 				step: 1,
 				min: 0,
@@ -42,14 +49,8 @@ var DIREACTION_DOWN = 'down';
 				min: 0,
 				max: 50
 			},
+			delay: 0,
 			currentDate: 0,
-			day: {
-				step: 1,
-				len: 7,
-				filter: ['今天', '明天', '后天'],
-				format: 'M月d日'
-			},
-			delay: date.MINUTE_TIMESTAMP * 15,
 			rate: {
 				translateY: 0.4,
 				translateX: 0.1,
@@ -72,7 +73,8 @@ var DIREACTION_DOWN = 'down';
 			backDuration: 500,
 			adjustDuration: 50,
 			runDuration: 200,
-			showCls: 'show'
+			showCls: 'show',
+			placeHolder: '请选择日期'
 		},
 		_create: function () {
 			this.$list = $(this._options.listTpl).appendTo($(document.body));
@@ -92,14 +94,16 @@ var DIREACTION_DOWN = 'down';
 			this.$cancel = $('.cancel-hook', this.$list);
 			this.$confirm = $('.confirm-hook', this.$list);
 
-			this.$datetext = $('.text-hook', this.$el);
+			this.$datetext = $(format(this._options.inputTpl, {
+				placeHolder: this._options.placeHolder
+			})).appendTo(this.$el);
 
 			this.transformKey = $.fx.cssPrefix + 'transform';
 
 			this._bindEvent();
 		},
 		_init: function () {
-			this.now = new Date(+new Date + this._options.delay);
+			this.now = new Date(+new Date + this._options.delay * date.MINUTE_TIMESTAMP);
 
 			var currentDate = this.$el.data('currentDate') || this._options.currentDate;
 			if (currentDate < this.now) {
@@ -119,7 +123,7 @@ var DIREACTION_DOWN = 'down';
 			var minuteConf = this._options.minute;
 			var current = Math.ceil(this.currentDate.getMinutes() / minuteConf.step) % this.minutes.length;
 			var begin = Math.ceil(this.now.getMinutes() / minuteConf.step) % this.minutes.length;
-			var delay = this._options.delay / date.MINUTE_TIMESTAMP;
+			var delay = this._options.delay;
 			if (this.currentDate.getMinutes() < delay) {
 				this.currentHourCarry = 1;
 			} else {

@@ -10,7 +10,7 @@
   <link rel="stylesheet" href="lib/reset/reset.css">
   <link rel="stylesheet" href="timepicker/timepicker.css">
   <style>
-    .subscribe {
+    .date {
       width: 200px;
       height: 40px;
       line-height: 40px;
@@ -23,21 +23,32 @@
       font-size: 2rem;
     }
 
-    .subscribe .text {
-      vertical-align: middle;
-    }
-
   </style>
 </head>
 <body>
-<div id="subscribe" class="subscribe">
-  <span class="text text-hook">请选择时间</span>
-</div>
+<div id="date" class="date"></div>
 <script src="lib/lib.js"></script>
 <script src="timepicker/timepicker.js"></script>
 <script>
-  $('#subscribe').timePicker({
-    currentHour: 5
+  $('#date').timePicker({
+    delay: 0,
+    day: {
+      step: 1,
+      len: 7,
+      filter: ['今天', '明天', '后天'],
+      format: 'M月d日'
+    },
+    hour: {
+      step: 1,
+      min: 0,
+      max: 23
+    },
+    minute: {
+      step: 10,
+      min: 0,
+      max: 50
+    },
+    placeHolder: '请选择日期'
   });
 </script>
 </body>
