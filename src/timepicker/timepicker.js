@@ -278,16 +278,9 @@ var DIREACTION_DOWN = 'down';
 				.data('tmpYTranslate', '')
 				.data('begin', begin)
 				.data('end', end);
-			var me = this;
-			$items.each(function () {
-				var diff = $(this).data('index') - current;
-				var deg = diff * me._options.step.deg;
-				$(this).data('deg', deg)
-					.data('tmpdeg', '');
 
-				var cssValue = me._getCssByDeg(deg, type);
-				me._reSetCss($(this), cssValue);
-			});
+			this._setItemsDeg($items, yTranslate, begin, type);
+
 		},
 		_bindEvent: function () {
 
@@ -349,20 +342,11 @@ var DIREACTION_DOWN = 'down';
 				}
 
 				if (me.$minute.data('tmpYTranslate') || me.$minute.data('tmpYTranslate') === 0) {
-
 					me.$minute.data('yTranslate', me.$minute.data('tmpYTranslate'));
-					me.$minuteitems.each(function () {
-						$(this).data('deg', $(this).data('tmpdeg'));
-					});
 				}
 
 				if (me.$minutemirror.data('tmpYTranslate') || me.$minutemirror.data('tmpYTranslate') === 0) {
-
 					me.$minutemirror.data('yTranslate', me.$minutemirror.data('tmpYTranslate'));
-					me.$minutemirroritems.each(function () {
-						$(this).data('deg', $(this).data('tmpdeg'));
-					});
-
 				}
 
 				event.preventDefault();
@@ -540,20 +524,11 @@ var DIREACTION_DOWN = 'down';
 				}
 
 				if (me.$hour.data('tmpYTranslate') || me.$hour.data('tmpYTranslate') === 0) {
-
 					me.$hour.data('yTranslate', me.$hour.data('tmpYTranslate'));
-					me.$houritems.each(function () {
-						$(this).data('deg', $(this).data('tmpdeg'));
-					});
 				}
 
 				if (me.$hourmirror.data('tmpYTranslate') || me.$hourmirror.data('tmpYTranslate') === 0) {
-
 					me.$hourmirror.data('yTranslate', me.$hourmirror.data('tmpYTranslate'));
-					me.$hourmirroritems.each(function () {
-						$(this).data('deg', $(this).data('tmpdeg'));
-					});
-
 				}
 
 				event.preventDefault();
@@ -686,20 +661,11 @@ var DIREACTION_DOWN = 'down';
 				}
 
 				if (me.$day.data('tmpYTranslate') || me.$day.data('tmpYTranslate') === 0) {
-
 					me.$day.data('yTranslate', me.$day.data('tmpYTranslate'));
-					me.$dayitems.each(function () {
-						$(this).data('deg', $(this).data('tmpdeg'));
-					});
-
 				}
 
 				if (me.$daymirror.data('tmpYTranslate') || me.$daymirror.data('tmpYTranslate') === 0) {
-
 					me.$daymirror.data('yTranslate', me.$daymirror.data('tmpYTranslate'));
-					me.$daymirroritems.each(function () {
-						$(this).data('deg', $(this).data('tmpdeg'));
-					});
 				}
 
 				event.preventDefault();
@@ -775,7 +741,6 @@ var DIREACTION_DOWN = 'down';
 			var distance = option.distance;
 
 			var steplen = this._options.step.len;
-			var stepdeg = this._options.step.deg;
 
 			var begin = $wheel.data('begin');
 			var end = $wheel.data('end');
@@ -804,16 +769,8 @@ var DIREACTION_DOWN = 'down';
 			$wheel.css(translateCss);
 			$wheel.data('tmpYTranslate', translate);
 
-			var degChange = distance * stepdeg / steplen;
+			this._setItemsDeg($items, translate, begin, type);
 
-			var me = this;
-			$items.each(function () {
-				var deg = $(this).data('deg') + degChange;
-
-				$(this).data('tmpdeg', deg);
-				var cssValue = me._getCssByDeg(deg, type);
-				me._reSetCss($(this), cssValue);
-			});
 
 		},
 		_wheelAdjust: function ($wheel, $items, option, callback) {
@@ -825,7 +782,6 @@ var DIREACTION_DOWN = 'down';
 			if (!translate && translate !== 0)
 				return;
 
-			//$wheel.data('tmpYTranslate', '');
 			var steplen = this._options.step.len;
 
 			var begin = $wheel.data('begin');
@@ -857,11 +813,6 @@ var DIREACTION_DOWN = 'down';
 
 			}
 			var runDistance = targetTranslate - translate;
-
-			$items.each(function () {
-				var deg = $(this).data('tmpdeg');
-				$(this).data('deg', deg);
-			});
 
 			var runOption = {
 				type: type,
@@ -909,11 +860,6 @@ var DIREACTION_DOWN = 'down';
 				diff = runDistance - translate - maxTranslate;
 			}
 
-			$items.each(function () {
-				var deg = $(this).data('tmpdeg');
-				$(this).data('deg', deg);
-			});
-
 			var easeExtra;
 			var duration;
 			var easeFn;
@@ -957,11 +903,13 @@ var DIREACTION_DOWN = 'down';
 			var easeExtra = option.easeExtra;
 
 			var steplen = this._options.step.len;
-			var stepdeg = this._options.step.deg;
-
-			var degChange = runDistance * stepdeg / steplen;
 
 			var yTranslate = $wheel.data('tmpYTranslate');
+
+			var begin = $wheel.data('begin');
+			var end = $wheel.data('end');
+
+			var maxTranslate = (end - begin) * steplen;
 
 			$wheel.data('isRunning', true);
 
@@ -979,22 +927,9 @@ var DIREACTION_DOWN = 'down';
 				var timeup = timePercent === 1;
 				//stop
 				if (timeup) {
-					//$items.each(function () {
-					//	var deg = $(this).data('deg') + degChange;
-					//	deg = Math.round(deg / stepdeg) * stepdeg;
-					//	$(this).data('tmpdeg', deg)
-					//		.data('deg', deg);
-					//	var cssValue = me._getCssByDeg(deg, type);
-					//	me._reSetCss($(this), cssValue);
-					//});
 
 					var translate = yTranslate + runDistance;
 					translate = Math.round(translate / steplen) * steplen;
-
-					var begin = $wheel.data('begin');
-					var end = $wheel.data('end');
-
-					var maxTranslate = (end - begin) * steplen;
 
 					//make sure translate valid
 					translate = Math.min(0, Math.max(-maxTranslate, translate));
@@ -1006,17 +941,7 @@ var DIREACTION_DOWN = 'down';
 						.data('tmpYTranslate', translate)
 						.css(translateCss);
 
-					var current = -translate / steplen + $wheel.data('begin');
-
-					$items.each(function () {
-						var diff = $(this).data('index') - current;
-						var deg = diff * me._options.step.deg;
-						$(this).data('deg', deg)
-							.data('tmpdeg', deg);
-
-						var cssValue = me._getCssByDeg(deg, type);
-						me._reSetCss($(this), cssValue);
-					});
+					me._setItemsDeg($items, translate, begin, type);
 
 					this.stop();
 					callback && callback(Math.abs(translate / steplen));
@@ -1029,19 +954,6 @@ var DIREACTION_DOWN = 'down';
 					runPercent = easeFn(timePercent, duration * timePercent, 0, 1, duration, easeExtra);
 				}
 
-				$items.each(function () {
-					var deg = $(this).data('deg');
-					if (runPercent > 1) {
-						var extra = (runPercent - 1) * stepdeg;
-						deg += degChange + (direction === DIREACTION_UP ? -extra : extra);
-					} else {
-						deg += degChange * runPercent;
-					}
-					$(this).data('tmpdeg', deg);
-					var cssValue = me._getCssByDeg(deg, type);
-					me._reSetCss($(this), cssValue);
-				});
-
 				var translate;
 				if (runPercent > 1) {
 					var extra = (runPercent - 1) * steplen;
@@ -1049,6 +961,8 @@ var DIREACTION_DOWN = 'down';
 				} else {
 					translate = yTranslate + runDistance * runPercent;
 				}
+
+				me._setItemsDeg($items, translate, begin, type);
 
 				var translateCss = {};
 				translateCss[me.transformKey] = 'translateY(' + translate + 'px)';
@@ -1077,6 +991,19 @@ var DIREACTION_DOWN = 'down';
 
 			return targetTranslate;
 		},
+		_setItemsDeg: function ($items, translate, begin, type) {
+			var steplen = this._options.step.len;
+
+			var current = -translate / steplen + begin;
+			var me = this;
+			$items.each(function () {
+				var diff = $(this).data('index') - current;
+				var deg = diff * me._options.step.deg;
+
+				var cssValue = me._getCssByDeg(deg, type);
+				me._reSetCss($(this), cssValue);
+			});
+		},
 		_getCssByDeg: function (deg, type) {
 			var cssValue = {};
 
@@ -1103,11 +1030,9 @@ var DIREACTION_DOWN = 'down';
 				transform += ' skewX(' + skewX + 'deg) translateX(' + xTranslate + 'px)';
 			}
 
-
 			cssValue[this.transformKey] = transform;
 
 			var color;
-
 			if (/mirror/.test(type)) {
 				color = '#000';
 			} else {
