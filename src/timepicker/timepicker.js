@@ -19,7 +19,7 @@ var DIREACTION_DOWN = 'down';
 			'<span class="cancel cancel-hook">取消</span>' +
 			'<span class="confirm confirm-hook">确定</span>' +
 			'</div>' +
-			'<div class="wheel">' +
+			'<div class="wheel wheel-hook">' +
 			'<ul class="day day-hook"></ul>' +
 			'<ul class="hour hour-hook"></ul>' +
 			'<ul class="minute minute-hook"></ul>' +
@@ -59,18 +59,25 @@ var DIREACTION_DOWN = 'down';
 				len: 20,
 				deg: 25
 			},
+			wheel: {
+				height: 160,
+				centerPadding: 4
+			},
 			velocity: 300,
 			threshold: 15,
 			moveThreshold: 5,
 			swipeDuration: 2500,
 			swipeDefaultStep: 4,
 			rollbackDuration: 1000,
+			adjustDuration: 50,
+			runDuration: 200,
 			showCls: 'show'
 		},
 		_create: function () {
 			this.$list = $(this._options.listTpl).appendTo($(document.body));
 
 			this.$panel = $('.panel-hook', this.$list);
+			this.$wheel = $('.wheel-hook', this.$list);
 
 			this.$day = $('.day-hook', this.$list);
 			this.$daymirror = $('.daymirror-hook', this.$list);
@@ -397,18 +404,27 @@ var DIREACTION_DOWN = 'down';
 				}
 				else {
 					clearTimeout(timer);
+					var offsetY;
+					if (delta === 0) {
+						offsetY = touch.y2 - me.$wheel.offset().top;
+					}
 					timer = setTimeout(function () {
 						if (!me.$minute.data('isRunning')) {
 							me._wheelAdjust(me.$minute, me.$minuteitems, {
-								type: 'normal.right'
+								type: 'normal.right',
+								delta: delta,
+								offsetY: offsetY
 							}, onWheelStop);
+						}
+						if (!me.$minutemirror.data('isRunning')) {
 							me._wheelAdjust(me.$minutemirror, me.$minutemirroritems, {
-								type: 'mirror.right'
+								type: 'mirror.right',
+								delta: delta,
+								offsetY: offsetY
 							});
 						}
 					}, 20);
 				}
-
 
 			}
 
@@ -559,7 +575,6 @@ var DIREACTION_DOWN = 'down';
 				var direction = delta > 0 ? DIREACTION_DOWN : DIREACTION_UP;
 
 				delta = Math.abs(delta);
-
 				if (duration < me._options.velocity && delta > me._options.threshold) {
 					var runStep = me._getRunStepBySwipe(delta);
 
@@ -578,13 +593,23 @@ var DIREACTION_DOWN = 'down';
 				}
 				else {
 					clearTimeout(timer);
+					var offsetY;
+					if (delta === 0) {
+						offsetY = touch.y2 - me.$wheel.offset().top;
+					}
 					timer = setTimeout(function () {
 						if (!me.$hour.data('isRunning')) {
 							me._wheelAdjust(me.$hour, me.$houritems, {
-								type: 'normal.middle'
+								type: 'normal.middle',
+								delta: delta,
+								offsetY: offsetY
 							}, onWheelStop);
+						}
+						if (!me.$hourmirror.data('isRunning')) {
 							me._wheelAdjust(me.$hourmirror, me.$hourmirroritems, {
-								type: 'mirror.middle'
+								type: 'mirror.middle',
+								delta: delta,
+								offsetY: offsetY
 							});
 						}
 					}, 20);
@@ -715,13 +740,23 @@ var DIREACTION_DOWN = 'down';
 				}
 				else {
 					clearTimeout(timer);
+					var offsetY;
+					if (delta === 0) {
+						offsetY = touch.y2 - me.$wheel.offset().top;
+					}
 					timer = setTimeout(function () {
 						if (!me.$day.data('isRunning')) {
 							me._wheelAdjust(me.$day, me.$dayitems, {
-								type: 'normal.left'
+								type: 'normal.left',
+								delta: delta,
+								offsetY: offsetY
 							}, onWheelStop);
+						}
+						if (!me.$daymirror.data('isRunning')) {
 							me._wheelAdjust(me.$daymirror, me.$daymirroritems, {
-								type: 'mirror.left'
+								type: 'mirror.left',
+								delta: delta,
+								offsetY: offsetY
 							});
 						}
 					}, 20);
@@ -774,13 +809,15 @@ var DIREACTION_DOWN = 'down';
 
 		},
 		_wheelAdjust: function ($wheel, $items, option, callback) {
-
 			var type = option.type;
+			var delta = option.delta;
 
 			var translate = $wheel.data('tmpYTranslate');
 
-			if (!translate && translate !== 0)
-				return;
+			if (translate === undefined) {
+				translate = 0;
+			}
+
 
 			var steplen = this._options.step.len;
 
@@ -789,18 +826,34 @@ var DIREACTION_DOWN = 'down';
 			var maxTranslate = (end - begin) * steplen;
 
 			var targetTranslate;
+			var duration = this._options.adjustDuration;
 
 			if (translate > 0) {
 				targetTranslate = 0;
 			} else if (translate < -maxTranslate) {
 				targetTranslate = -maxTranslate;
 			} else {
-				if (translate % steplen === 0) {
+
+				if (delta !== 0 && translate % steplen === 0) {
 					callback && callback(Math.abs(translate / steplen));
 					return;
 				}
 
-				targetTranslate = Math.floor(translate / steplen) * steplen + ( Math.abs(translate % steplen) <= 10 ? steplen : 0);
+				if (delta === 0 && translate % steplen === 0) {
+					var offsetY = option.offsetY - this._options.wheel.height / 2;
+					var runDistance;
+					var centerOffset = this._options.wheel.centerPadding + steplen / 2;
+					if (offsetY <= 0) {
+						runDistance = Math.floor((offsetY + centerOffset) / steplen) * steplen;
+					} else {
+						runDistance = Math.ceil((offsetY - centerOffset) / steplen) * steplen;
+					}
+					//var runDistance = Math.floor(offsetY / steplen) * steplen;
+					targetTranslate = Math.min(0, Math.max(-maxTranslate, -runDistance + translate));
+					duration = this._options.runDuration;
+				} else {
+					targetTranslate = Math.floor(translate / steplen) * steplen + ( Math.abs(translate % steplen) <= 10 ? steplen : 0);
+				}
 			}
 
 			var direction;
@@ -813,12 +866,13 @@ var DIREACTION_DOWN = 'down';
 
 			}
 			var runDistance = targetTranslate - translate;
-
+			if (runDistance === 0)
+				return;
 			var runOption = {
 				type: type,
 				direction: direction,
 				runDistance: runDistance,
-				duration: 50,
+				duration: duration,
 				easeFn: easing.easeOutQuad
 			};
 

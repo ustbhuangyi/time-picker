@@ -1,6 +1,6 @@
 var each = require('./each');
 
-var DEBUG = false;
+var DEBUG = true;
 
 var myConsole;
 
