@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no"
+        media="(device-height: 568px)">
+  <meta name="format-detection" content="telephone=no"/>
+  <title>time picker</title>
+  <link rel="stylesheet" href="lib/reset/reset.css">
+  <link rel="stylesheet" href="timepicker/timepicker.css">
+  <style>
+    .date {
+      width: 200px;
+      height: 40px;
+      line-height: 40px;
+      margin: 0 auto;
+      text-align: center;
+      border: 1px solid #d7d7d7;
+      border-radius: 5px;
+      color: #ff8a01;
+      background: #fff;
+      font-size: 2rem;
+    }
+
+  </style>
+</head>
+<body>
+<div id="date" class="date"></div>
+<script src="lib/lib.js"></script>
+<script src="timepicker/timepicker.js"></script>
+<script>
+  $('#date').timePicker({
+    delay: 0,
+    day: {
+      step: 1,
+      len: 7,
+      filter: ['今天', '明天', '后天'],
+      format: 'M月d日'
+    },
+    hour: {
+      step: 1,
+      min: 0,
+      max: 23
+    },
+    minute: {
+      step: 10,
+      min: 0,
+      max: 50
+    },
+    placeHolder: '请选择日期'
+  });
+</script>
+</body>
+</html>
