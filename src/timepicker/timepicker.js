@@ -69,6 +69,7 @@ var DIREACTION_DOWN = 'down';
 			swipeDuration: 2500,
 			swipeDefaultStep: 4,
 			rollbackDuration: 1000,
+			backDuration: 500,
 			adjustDuration: 50,
 			runDuration: 200,
 			showCls: 'show'
@@ -278,9 +279,10 @@ var DIREACTION_DOWN = 'down';
 			var steplen = this._options.step.len;
 
 			var yTranslate = -steplen * (current - begin);
-			var translateCss = {};
-			translateCss[this.transformKey] = 'translateY(' + yTranslate + 'px)';
-			$wheel.css(translateCss)
+			var cssValue = {};
+			cssValue[this.transformKey] = 'translateY(' + yTranslate + 'px)';
+			cssValue['paddingBottom'] = (end - begin) * steplen + this._options.wheel.height / 2 - steplen / 2;
+			$wheel.css(cssValue)
 				.data('yTranslate', yTranslate)
 				.data('tmpYTranslate', '')
 				.data('begin', begin)
@@ -362,6 +364,7 @@ var DIREACTION_DOWN = 'down';
 			function onTouchMove(e) {
 
 				firstTouch = e.touches[0];
+
 				touch.y2 = firstTouch.pageY;
 				var distance = touch.y2 - touch.y1;
 
@@ -918,15 +921,17 @@ var DIREACTION_DOWN = 'down';
 			var duration;
 			var easeFn;
 			if (diff > 0) {
-				duration = this._options.rollbackDuration;
 				runDistance = direction === DIREACTION_DOWN ? -translate : -translate - maxTranslate;
 
 				if (translate > 0 || translate < -maxTranslate) {
+					duration = this._options.backDuration;
 					easeFn = easing.easeInBack;
 				} else {
+					duration = this._options.rollbackDuration;
 					easeFn = easing.easeOutBack;
+					easeExtra = this._getEaseExtraByDiff(diff);
 				}
-				easeExtra = this._getEaseExtraByDiff(diff);
+
 
 			} else {
 				duration = this._options.swipeDuration;
@@ -960,11 +965,6 @@ var DIREACTION_DOWN = 'down';
 
 			var yTranslate = $wheel.data('tmpYTranslate');
 
-			var begin = $wheel.data('begin');
-			var end = $wheel.data('end');
-
-			var maxTranslate = (end - begin) * steplen;
-
 			$wheel.data('isRunning', true);
 
 			var timeline = new Timeline();
@@ -977,6 +977,12 @@ var DIREACTION_DOWN = 'down';
 					this.stop();
 					return;
 				}
+
+				var begin = $wheel.data('begin');
+				var end = $wheel.data('end');
+
+				var maxTranslate = (end - begin) * steplen;
+
 				var timePercent = Math.min(1, time / duration);
 				var timeup = timePercent === 1;
 				//stop
@@ -985,6 +991,10 @@ var DIREACTION_DOWN = 'down';
 					var translate = yTranslate + runDistance;
 					translate = Math.round(translate / steplen) * steplen;
 
+					//may be NAN
+					if (translate !== translate) {
+						translate = 0;
+					}
 					//make sure translate valid
 					translate = Math.min(0, Math.max(-maxTranslate, translate));
 

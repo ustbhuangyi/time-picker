@@ -97,7 +97,7 @@
 
 .timepicker .day, .timepicker .hour, .timepicker .minute {
     font-size: 2rem;
-    padding: 70px 0;
+    padding-top: 70px;
 }
 
 .timepicker .daymirror, .timepicker .hourmirror, .timepicker .minutemirror {
