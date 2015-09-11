@@ -62,8 +62,8 @@
 }
 
 .timepicker .center, .timepicker .wheel {
-
     display: -ms-flexbox;
+    display: -webkit-box;
     display: -webkit-flex;
     display: flex;
 }
@@ -88,6 +88,7 @@
 
 .timepicker ul {
     -ms-flex: 1 1 0.000000001px;
+    -webkit-box-flex: 1;
     -webkit-flex: 1;
     flex: 1;
     -webkit-flex-basis: 0.000000001px;
