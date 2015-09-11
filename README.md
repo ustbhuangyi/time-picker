@@ -31,6 +31,9 @@ $('#date').timePicker({
       max: 50  // max minute
     }，
     placeHolder: '请选择日期'
+  }).on('date.confirm', function (e, data) {
+      console.log(data.text);  //get date text
+      console.log(data.val);   //get date value
   });
 });
 ```
