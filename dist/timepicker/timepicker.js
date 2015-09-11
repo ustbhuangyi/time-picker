@@ -145,6 +145,7 @@
 				})).appendTo(this.$el);
 
 				this.transformKey = $.fx.cssPrefix + 'transform';
+				this.windowHeight = document.documentElement.clientHeight;
 
 				this._bindEvent();
 			},
@@ -375,6 +376,7 @@
 				var start;
 				var delta;
 				var firstTouch;
+				var stopped;
 
 				this.$minute.on('touchstart', onTouchStart).
 					on('touchmove', onTouchMove).
@@ -384,7 +386,11 @@
 					on('touchmove', onTouchMove).
 					on('touchend', onTouchEnd);
 
+
 				function onTouchStart(e) {
+					if (stopped) {
+						stopped = false;
+					}
 
 					firstTouch = e.touches[0];
 					touch.y1 = firstTouch.pageY;
@@ -408,14 +414,23 @@
 						me.$minutemirror.data('yTranslate', me.$minutemirror.data('tmpYTranslate'));
 					}
 
-					event.preventDefault();
+					e.preventDefault();
 				}
 
 				function onTouchMove(e) {
+					if (stopped) {
+						return;
+					}
 
 					firstTouch = e.touches[0];
 
 					touch.y2 = firstTouch.pageY;
+
+					if (touch.y2 > me.windowHeight || touch.y2 < 0) {
+						onTouchEnd();
+						return;
+					}
+
 					var distance = touch.y2 - touch.y1;
 
 					me._wheelMove(me.$minute, me.$minuteitems, {
@@ -426,9 +441,14 @@
 						distance: distance,
 						type: 'mirror.right'
 					});
+
+
 				}
 
-				function onTouchEnd(e) {
+				function onTouchEnd() {
+					if (!stopped) {
+						stopped = true;
+					}
 
 					touch.y2 = firstTouch.pageY;
 
@@ -567,6 +587,7 @@
 				var start;
 				var delta;
 				var firstTouch;
+				var stopped;
 
 				this.$hour.on('touchstart', onTouchStart).
 					on('touchmove', onTouchMove).
@@ -577,6 +598,9 @@
 					on('touchend', onTouchEnd);
 
 				function onTouchStart(e) {
+					if (stopped) {
+						stopped = false;
+					}
 
 					firstTouch = e.touches[0];
 					touch.y1 = firstTouch.pageY;
@@ -600,13 +624,22 @@
 						me.$hourmirror.data('yTranslate', me.$hourmirror.data('tmpYTranslate'));
 					}
 
-					event.preventDefault();
+					e.preventDefault();
 				}
 
 				function onTouchMove(e) {
+					if (stopped) {
+						return;
+					}
 
 					firstTouch = e.touches[0];
 					touch.y2 = firstTouch.pageY;
+
+					if (touch.y2 > me.windowHeight || touch.y2 < 0) {
+						onTouchEnd();
+						return;
+					}
+
 					var distance = touch.y2 - touch.y1;
 
 					me._wheelMove(me.$hour, me.$houritems, {
@@ -617,9 +650,14 @@
 						distance: distance,
 						type: 'mirror.middle'
 					});
+
 				}
 
-				function onTouchEnd(e) {
+				function onTouchEnd() {
+					if (!stopped) {
+						stopped = true;
+					}
+
 					touch.y2 = firstTouch.pageY;
 
 					var duration = +new Date - start;
@@ -713,6 +751,7 @@
 				var start;
 				var delta;
 				var firstTouch;
+				var stopped;
 
 				this.$day.on('touchstart', onTouchStart).
 					on('touchmove', onTouchMove).
@@ -723,6 +762,9 @@
 					on('touchend', onTouchEnd);
 
 				function onTouchStart(e) {
+					if (stopped) {
+						stopped = false;
+					}
 
 					firstTouch = e.touches[0];
 					touch.y1 = firstTouch.pageY;
@@ -746,12 +788,22 @@
 						me.$daymirror.data('yTranslate', me.$daymirror.data('tmpYTranslate'));
 					}
 
-					event.preventDefault();
+					e.preventDefault();
 				}
 
 				function onTouchMove(e) {
+					if (stopped) {
+						return;
+					}
+
 					firstTouch = e.touches[0];
 					touch.y2 = firstTouch.pageY;
+
+					if (touch.y2 > me.windowHeight || touch.y2 < 0) {
+						onTouchEnd();
+						return;
+					}
+
 					var distance = touch.y2 - touch.y1;
 
 					me._wheelMove(me.$day, me.$dayitems, {
@@ -764,7 +816,11 @@
 					});
 				}
 
-				function onTouchEnd(e) {
+				function onTouchEnd() {
+					if (!stopped) {
+						stopped = true;
+					}
+
 					touch.y2 = firstTouch.pageY;
 
 					var duration = +new Date - start;
