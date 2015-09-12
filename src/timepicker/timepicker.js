@@ -71,8 +71,8 @@ var DIREACTION_DOWN = 'down';
 			swipeDefaultStep: 4,
 			rollbackDuration: 1000,
 			backDuration: 500,
-			adjustDuration: 50,
-			runDuration: 200,
+			adjustDuration: 400,
+			runDuration: 300,
 			showCls: 'show',
 			placeHolder: '请选择日期'
 		},
