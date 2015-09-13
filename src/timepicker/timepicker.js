@@ -125,12 +125,12 @@ var DIREACTION_DOWN = 'down';
 			var current = Math.ceil(this.currentDate.getMinutes() / minuteConf.step) % this.minutes.length;
 			var begin = Math.ceil(this.now.getMinutes() / minuteConf.step) % this.minutes.length;
 			//var delay = this._options.delay;
-			if (this.currentDate.getMinutes() >= minuteConf.max) {
+			if (this.currentDate.getMinutes() >= minuteConf.max || this.currentDate.getMinutes() <= minuteConf.step) {
 				this.currentHourCarry = 1;
 			} else {
 				this.currentHourCarry = 0;
 			}
-			if (this.now.getMinutes() >= minuteConf.max) {
+			if (this.now.getMinutes() >= minuteConf.max || this.now.getMinutes() <= minuteConf.step) {
 				this.beginHourCarry = 1;
 			} else {
 				this.beginHourCarry = 0;
@@ -179,14 +179,15 @@ var DIREACTION_DOWN = 'down';
 			var current = Math.ceil((this.currentDate.getHours() + this.currentHourCarry) / hourConf.step) % this.hours.length;
 			var begin = Math.ceil((this.now.getHours() + this.beginHourCarry) / hourConf.step) % this.hours.length;
 
-			if (this.currentHourCarry && this.currentDate.getHours() === 0) {
+			if (this.currentHourCarry && (this.currentDate.getHours() >= hourConf.max || this.currentDate.getHours() <= hourConf.step)) {
 				this.currentDayCarry = 1;
 			} else {
 				this.currentDayCarry = 0;
 			}
-			if (this.beginHourCarry && this.now.getHours() === 0) {
+			if (this.beginHourCarry && (this.now.getHours() >= hourConf.max || this.now.getHours() <= hourConf.step)) {
 				this.beginDayCarry = 1;
-			} else {
+			}
+			else {
 				this.beginDayCarry = 0;
 			}
 			var end = this.hours.length - 1;
