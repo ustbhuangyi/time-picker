@@ -37,7 +37,7 @@ $('#date').timePicker({
   });
 });
 ```
-Usually，these config are enough,  other config are related to experience, you don't need to change them.  but if you are not satisfied with the experience or the styles,  just fork it and DIY. 
+Usually，these config are enough,  other config are related to experience, you don't need to change them.  but if you are not satisfied with the experience or the styles, extend the default options or fork it and DIY.
 
 ## Build ##
 
@@ -45,7 +45,7 @@ clone this repo
 ```bash
 git clone https://github.com/ustbhuangyi/time-picker.git
 ```
-install the dependences
+install the dependence
 ```bash
 cd time-picker
 npm install
