@@ -150,13 +150,48 @@
 				this._bindEvent();
 			},
 			_init: function () {
-				this.now = new Date(+new Date + this._options.delay * date.MINUTE_TIMESTAMP);
+				this.now = new Date;
+				this.beginDate = new Date(+this.now + this._options.delay * date.MINUTE_TIMESTAMP);
 
 				var currentDate = this.$el.data('currentDate') || this._options.currentDate;
-				if (currentDate < this.now) {
+				if (currentDate < this.beginDate) {
 					currentDate = undefined;
 				}
-				this.currentDate = currentDate ? new Date(currentDate) : this.now;
+				this.currentDate = currentDate ? new Date(currentDate) : this.beginDate;
+
+				var minuteConf = this._options.minute;
+				var hourConf = this._options.hour;
+
+				var currentMinute = this.currentDate.getMinutes();
+				var currentHour = this.currentDate.getHours();
+
+				if (currentMinute > minuteConf.max) {
+					this.currentHourCarry = 1;
+				} else {
+					this.currentHourCarry = 0;
+				}
+
+				if ((this.currentHourCarry && currentHour === hourConf.max)) {
+					this.currentDayCarry = 1;
+				} else {
+					this.currentDayCarry = 0;
+				}
+
+				var beginMinute =  this.beginDate.getMinutes();
+				var beginHour = this.beginDate.getHours();
+
+				if (beginMinute > minuteConf.max) {
+					this.beginHourCarry= 1;
+				} else {
+					this.beginHourCarry = 0;
+				}
+
+				if ((this.beginHourCarry && beginHour === hourConf.max)) {
+					this.beginDayCarry = 1;
+				} else {
+					this.beginDayCarry = 0;
+				}
+
 
 				this._initMinutes();
 
@@ -169,18 +204,9 @@
 				this.minutes = this._genMinutes();
 				var minuteConf = this._options.minute;
 				var current = Math.ceil(this.currentDate.getMinutes() / minuteConf.step) % this.minutes.length;
-				var begin = Math.ceil(this.now.getMinutes() / minuteConf.step) % this.minutes.length;
+				var begin = Math.ceil(this.beginDate.getMinutes() / minuteConf.step) % this.minutes.length;
 				//var delay = this._options.delay;
-				if (this.currentDate.getMinutes() >= minuteConf.max) {
-					this.currentHourCarry = 1;
-				} else {
-					this.currentHourCarry = 0;
-				}
-				if (this.now.getMinutes() >= minuteConf.max) {
-					this.beginHourCarry = 1;
-				} else {
-					this.beginHourCarry = 0;
-				}
+
 				var end = this.minutes.length - 1;
 				this._fillMinutes(begin, end, current);
 			},
@@ -223,18 +249,8 @@
 				this.hours = this._genHours();
 				var hourConf = this._options.hour;
 				var current = Math.ceil((this.currentDate.getHours() + this.currentHourCarry) / hourConf.step) % this.hours.length;
-				var begin = Math.ceil((this.now.getHours() + this.beginHourCarry) / hourConf.step) % this.hours.length;
+				var begin = Math.ceil((this.beginDate.getHours() + this.beginHourCarry) / hourConf.step) % this.hours.length;
 
-				if (this.currentHourCarry && this.currentDate.getHours() === 0) {
-					this.currentDayCarry = 1;
-				} else {
-					this.currentDayCarry = 0;
-				}
-				if (this.beginHourCarry && this.now.getHours() === 0) {
-					this.beginDayCarry = 1;
-				} else {
-					this.beginDayCarry = 0;
-				}
 				var end = this.hours.length - 1;
 				this._fillHours(begin, end, current);
 			},
@@ -275,7 +291,7 @@
 			_initDays: function () {
 				this.days = this._genDays();
 				var current = (+date.getZeroDate(this.currentDate) - +date.getZeroDate(this.now)) / date.DAY_TIMESTAMP + this.currentDayCarry;
-				var begin = 0 + this.beginDayCarry;
+				var begin = (+date.getZeroDate(this.beginDate) - +date.getZeroDate(this.now)) / date.DAY_TIMESTAMP + this.beginDayCarry;
 				var end = this.days.length - 1;
 				this._fillDays(begin, end, current);
 			},
@@ -571,7 +587,7 @@
 						if (currentHour > 0) {
 							begin = 0;
 						} else {
-							begin = Math.ceil(me.now.getMinutes() / minuteConf.step) % me.minutes.length;
+							begin = Math.ceil(me.beginDate.getMinutes() / minuteConf.step) % me.minutes.length;
 						}
 					}
 
@@ -736,7 +752,7 @@
 					if (currentDay > 0) {
 						begin = 0;
 					} else {
-						begin = Math.ceil((me.now.getHours() + me.currentHourCarry) / hourConf.step) % me.hours.length;
+						begin = Math.ceil((me.beginDate.getHours() + me.currentHourCarry) / hourConf.step) % me.hours.length;
 					}
 
 					currentHour = Math.min(end, currentHour + begin);
