@@ -388,9 +388,8 @@ var DIREACTION_DOWN = 'down';
 			}
 
 			function onTouchMove(e) {
-				if (stopped) {
+				if (stopped)
 					return;
-				}
 
 				firstTouch = e.touches[0];
 
@@ -598,9 +597,8 @@ var DIREACTION_DOWN = 'down';
 			}
 
 			function onTouchMove(e) {
-				if (stopped) {
+				if (stopped)
 					return;
-				}
 
 				firstTouch = e.touches[0];
 				touch.y2 = firstTouch.pageY;
@@ -762,9 +760,8 @@ var DIREACTION_DOWN = 'down';
 			}
 
 			function onTouchMove(e) {
-				if (stopped) {
+				if (stopped)
 					return;
-				}
 
 				firstTouch = e.touches[0];
 				touch.y2 = firstTouch.pageY;
@@ -816,8 +813,7 @@ var DIREACTION_DOWN = 'down';
 						delta: delta,
 						type: 'mirror.left'
 					});
-				}
-				else {
+				} else {
 					clearTimeout(timer);
 					var offsetY;
 					if (delta === 0) {
