@@ -323,7 +323,7 @@ var DIREACTION_DOWN = 'down';
 			var $targetmirroritems;
 			var eventName;
 			var type;
-			var mirrortype;
+			var mirrorType;
 			var timer = 0;
 			var touch = {};
 			var start;
@@ -355,16 +355,8 @@ var DIREACTION_DOWN = 'down';
 					$target.data('needStop', true);
 				}
 
-				if ($targetmirror.data('isRunning')) {
-					$targetmirror.data('needStop', true);
-				}
-
 				if ($target.data('tmpYTranslate') || $target.data('tmpYTranslate') === 0) {
 					$target.data('yTranslate', $target.data('tmpYTranslate'));
-				}
-
-				if ($targetmirror.data('tmpYTranslate') || $targetmirror.data('tmpYTranslate') === 0) {
-					$targetmirror.data('yTranslate', $targetmirror.data('tmpYTranslate'));
 				}
 
 				e.preventDefault();
@@ -381,7 +373,7 @@ var DIREACTION_DOWN = 'down';
 					$targetmirroritems = me.$daymirroritems;
 					eventName = 'day.stop';
 					type = 'normal.left';
-					mirrortype = 'mirror.left';
+					mirrorType = 'mirror.left';
 				} else if (pageX < wheelWidth * 2 / 3) {
 					$target = me.$hour;
 					$targetmirror = me.$hourmirror;
@@ -389,7 +381,7 @@ var DIREACTION_DOWN = 'down';
 					$targetmirroritems = me.$hourmirroritems;
 					eventName = 'hour.stop';
 					type = 'normal.middle';
-					mirrortype = 'mirror.middle';
+					mirrorType = 'mirror.middle';
 				} else {
 					$target = me.$minute;
 					$targetmirror = me.$minutemirror;
@@ -397,7 +389,7 @@ var DIREACTION_DOWN = 'down';
 					$targetmirroritems = me.$minutemirroritems;
 					eventName = 'minute.stop';
 					type = 'normal.right';
-					mirrortype = 'mirror.right';
+					mirrorType = 'mirror.right';
 				}
 			}
 
@@ -415,13 +407,10 @@ var DIREACTION_DOWN = 'down';
 
 				var distance = touch.y2 - touch.y1;
 
-				me._wheelMove($target, $targetitems, {
+				me._wheelMove($target, $targetitems, $targetmirror, $targetmirroritems, {
 					distance: distance,
-					type: type
-				});
-				me._wheelMove($targetmirror, $targetmirroritems, {
-					distance: distance,
-					type: mirrortype
+					type: type,
+					mirrorType: mirrorType
 				});
 
 			}
@@ -442,20 +431,14 @@ var DIREACTION_DOWN = 'down';
 				if (duration < me._options.velocity && delta > me._options.threshold) {
 					var runStep = me._getRunStepBySwipe(delta);
 
-					me._wheelSwipe($target, $targetitems, {
+					me._wheelSwipe($target, $targetitems, $targetmirror, $targetmirroritems, {
 						direction: direction,
 						runStep: runStep,
 						delta: delta,
 						type: type,
+						mirrorType: mirrorType,
 						eventName: eventName
 					}, onWheelStop);
-					me._wheelSwipe($targetmirror, $targetmirroritems, {
-						direction: direction,
-						runStep: runStep,
-						delta: delta,
-						type: mirrortype,
-						eventName: eventName
-					});
 				}
 				else {
 					clearTimeout(timer);
@@ -465,20 +448,13 @@ var DIREACTION_DOWN = 'down';
 					}
 					timer = setTimeout(function () {
 						if (!$target.data('isRunning')) {
-							me._wheelAdjust($target, $targetitems, {
+							me._wheelAdjust($target, $targetitems, $targetmirror, $targetmirroritems, {
 								type: type,
+								mirrorType: mirrorType,
 								delta: delta,
 								offsetY: offsetY,
 								eventName: eventName
 							}, onWheelStop);
-						}
-						if (!$targetmirror.data('isRunning')) {
-							me._wheelAdjust($targetmirror, $targetmirroritems, {
-								type: mirrortype,
-								delta: delta,
-								offsetY: offsetY,
-								eventName: eventName
-							});
 						}
 					}, 20);
 				}
@@ -624,9 +600,10 @@ var DIREACTION_DOWN = 'down';
 				me._fillHours(begin, end, currentHour)
 			}
 		},
-		_wheelMove: function ($wheel, $items, option) {
+		_wheelMove: function ($wheel, $items, $mirror, $mirroritems, option) {
 
 			var type = option.type;
+			var mirrorType = option.mirrorType;
 
 			var distance = option.distance;
 
@@ -657,14 +634,18 @@ var DIREACTION_DOWN = 'down';
 			var translateCss = {};
 			translateCss[this.transformKey] = 'translateY(' + translate + 'px)';
 			$wheel.css(translateCss);
+			$mirror.css(translateCss);
+
 			$wheel.data('tmpYTranslate', translate);
 
 			this._setItemsDeg($items, translate, begin, type);
-
+			this._setItemsDeg($mirroritems, translate, begin, mirrorType);
 
 		},
-		_wheelAdjust: function ($wheel, $items, option, callback) {
+		_wheelAdjust: function ($wheel, $items, $mirror, $mirroritems, option, callback) {
 			var type = option.type;
+			var mirrorType = option.mirrorType;
+
 			var delta = option.delta;
 
 			var translate = $wheel.data('tmpYTranslate');
@@ -725,6 +706,7 @@ var DIREACTION_DOWN = 'down';
 				return;
 			var runOption = {
 				type: type,
+				mirrorType: mirrorType,
 				direction: direction,
 				runDistance: runDistance,
 				duration: duration,
@@ -732,11 +714,12 @@ var DIREACTION_DOWN = 'down';
 				eventName: option.eventName
 			};
 
-			this._wheelRun($wheel, $items, runOption, callback);
+			this._wheelRun($wheel, $items, $mirror, $mirroritems, runOption, callback);
 		},
-		_wheelSwipe: function ($wheel, $items, option, callback) {
+		_wheelSwipe: function ($wheel, $items, $mirror, $mirroritems, option, callback) {
 
 			var type = option.type;
+			var mirrorType = option.mirrorType;
 
 			var direction = option.direction;
 			var runStep = option.runStep;
@@ -794,6 +777,7 @@ var DIREACTION_DOWN = 'down';
 
 			var runOption = {
 				type: type,
+				mirrorType: mirrorType,
 				direction: direction,
 				runDistance: runDistance,
 				duration: duration,
@@ -802,13 +786,15 @@ var DIREACTION_DOWN = 'down';
 				eventName: option.eventName
 			};
 
-			this._wheelRun($wheel, $items, runOption, callback);
+			this._wheelRun($wheel, $items, $mirror, $mirroritems, runOption, callback);
 
 		},
-		_wheelRun: function ($wheel, $items, option, callback) {
+		_wheelRun: function ($wheel, $items, $mirror, $mirroritems, option, callback) {
 			var me = this;
 
 			var type = option.type;
+			var mirrorType = option.mirrorType;
+
 			var direction = option.direction || DIREACTION_UP;
 			var runDistance = option.runDistance;
 			var duration = option.duration;
@@ -858,8 +844,10 @@ var DIREACTION_DOWN = 'down';
 						.data('yTranslate', translate)
 						.data('tmpYTranslate', translate)
 						.css(translateCss);
+					$mirror.css(translateCss);
 
 					me._setItemsDeg($items, translate, begin, type);
+					me._setItemsDeg($mirroritems, translate, begin, mirrorType);
 
 					this.stop();
 					callback && callback(Math.abs(translate / steplen), option);
@@ -881,11 +869,13 @@ var DIREACTION_DOWN = 'down';
 				}
 
 				me._setItemsDeg($items, translate, begin, type);
+				me._setItemsDeg($mirroritems, translate, begin, mirrorType);
 
 				var translateCss = {};
 				translateCss[me.transformKey] = 'translateY(' + translate + 'px)';
 				$wheel.css(translateCss)
 					.data('tmpYTranslate', translate);
+				$mirror.css(translateCss);
 			};
 			timeline.start();
 		},
