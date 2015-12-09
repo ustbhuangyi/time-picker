@@ -20,7 +20,8 @@ var DIREACTION_DOWN = 'down';
 			'<span class="cancel cancel-hook">取消</span>' +
 			'<span class="confirm confirm-hook">确定</span>' +
 			'</div>' +
-			'<div class="wheel wheel-hook">' +
+			'<div class="wheel-hook">' +
+			'<div class="wheel">' +
 			'<ul class="day day-hook"></ul>' +
 			'<ul class="hour hour-hook"></ul>' +
 			'<ul class="minute minute-hook"></ul>' +
@@ -29,6 +30,7 @@ var DIREACTION_DOWN = 'down';
 			'<ul class="daymirror daymirror-hook"></ul>' +
 			'<ul class="hourmirror hourmirror-hook"></ul>' +
 			'<ul class="minutemirror minutemirror-hook"></ul>' +
+			'</div>' +
 			'</div>' +
 			'</div>' +
 			'</div>',
@@ -131,11 +133,11 @@ var DIREACTION_DOWN = 'down';
 				this.currentDayCarry = 0;
 			}
 
-			var beginMinute =  this.beginDate.getMinutes();
+			var beginMinute = this.beginDate.getMinutes();
 			var beginHour = this.beginDate.getHours();
 
 			if (beginMinute > minuteConf.max) {
-				this.beginHourCarry= 1;
+				this.beginHourCarry = 1;
 			} else {
 				this.beginHourCarry = 0;
 			}
@@ -146,12 +148,12 @@ var DIREACTION_DOWN = 'down';
 				this.beginDayCarry = 0;
 			}
 
-
 			this._initMinutes();
 
 			this._initHours();
 
 			this._initDays();
+
 
 		},
 		_initMinutes: function () {
@@ -314,17 +316,186 @@ var DIREACTION_DOWN = 'down';
 		},
 		_bindEvent: function () {
 
+			var me = this;
+			var $target;
+			var $targetmirror;
+			var $targetitems;
+			var $targetmirroritems;
+			var eventName;
+			var type;
+			var mirrortype;
+			var timer = 0;
+			var touch = {};
+			var start;
+			var delta;
+			var firstTouch;
+			var stopped = true;
+
 			this.$list.on('touchstart', function (e) {
 				e.preventDefault();
 			});
+
+			this.$wheel.on('touchstart', onTouchStart).
+				on('touchmove', onTouchMove).
+				on('touchend', onTouchEnd);
+
+			function onTouchStart(e) {
+				if (!stopped)
+					return;
+				stopped = false;
+				firstTouch = e.touches[0];
+				touch.y1 = firstTouch.pageY;
+
+				setTargetByPageX(firstTouch.pageX);
+
+				start = +new Date;
+
+				clearTimeout(timer);
+				if ($target.data('isRunning')) {
+					$target.data('needStop', true);
+				}
+
+				if ($targetmirror.data('isRunning')) {
+					$targetmirror.data('needStop', true);
+				}
+
+				if ($target.data('tmpYTranslate') || $target.data('tmpYTranslate') === 0) {
+					$target.data('yTranslate', $target.data('tmpYTranslate'));
+				}
+
+				if ($targetmirror.data('tmpYTranslate') || $targetmirror.data('tmpYTranslate') === 0) {
+					$targetmirror.data('yTranslate', $targetmirror.data('tmpYTranslate'));
+				}
+
+				e.preventDefault();
+			}
+
+			function setTargetByPageX(pageX) {
+
+				var wheelWidth = me.$wheel.width();
+
+				if (pageX < wheelWidth / 3) {
+					$target = me.$day;
+					$targetmirror = me.$daymirror;
+					$targetitems = me.$dayitems;
+					$targetmirroritems = me.$daymirroritems;
+					eventName = 'day.stop';
+					type = 'normal.left';
+					mirrortype = 'mirror.left';
+				} else if (pageX < wheelWidth * 2 / 3) {
+					$target = me.$hour;
+					$targetmirror = me.$hourmirror;
+					$targetitems = me.$houritems;
+					$targetmirroritems = me.$hourmirroritems;
+					eventName = 'hour.stop';
+					type = 'normal.middle';
+					mirrortype = 'mirror.middle';
+				} else {
+					$target = me.$minute;
+					$targetmirror = me.$minutemirror;
+					$targetitems = me.$minuteitems;
+					$targetmirroritems = me.$minutemirroritems;
+					eventName = 'minute.stop';
+					type = 'normal.right';
+					mirrortype = 'mirror.right';
+				}
+			}
+
+			function onTouchMove(e) {
+				if (stopped)
+					return;
+				firstTouch = e.touches[0];
+
+				touch.y2 = firstTouch.pageY;
+
+				if (touch.y2 > me.windowHeight || touch.y2 < 0) {
+					onTouchEnd();
+					return;
+				}
+
+				var distance = touch.y2 - touch.y1;
+
+				me._wheelMove($target, $targetitems, {
+					distance: distance,
+					type: type
+				});
+				me._wheelMove($targetmirror, $targetmirroritems, {
+					distance: distance,
+					type: mirrortype
+				});
+
+			}
+
+			function onTouchEnd() {
+				if (stopped)
+					return;
+				stopped = true;
+				touch.y2 = firstTouch.pageY;
+
+				var duration = +new Date - start;
+				delta = touch.y2 - touch.y1;
+
+				var direction = delta > 0 ? DIREACTION_DOWN : DIREACTION_UP;
+
+				delta = Math.abs(delta);
+
+				if (duration < me._options.velocity && delta > me._options.threshold) {
+					var runStep = me._getRunStepBySwipe(delta);
+
+					me._wheelSwipe($target, $targetitems, {
+						direction: direction,
+						runStep: runStep,
+						delta: delta,
+						type: type,
+						eventName: eventName
+					}, onWheelStop);
+					me._wheelSwipe($targetmirror, $targetmirroritems, {
+						direction: direction,
+						runStep: runStep,
+						delta: delta,
+						type: mirrortype,
+						eventName: eventName
+					});
+				}
+				else {
+					clearTimeout(timer);
+					var offsetY;
+					if (delta === 0) {
+						offsetY = touch.y2 - me.$wheel.offset().top;
+					}
+					timer = setTimeout(function () {
+						if (!$target.data('isRunning')) {
+							me._wheelAdjust($target, $targetitems, {
+								type: type,
+								delta: delta,
+								offsetY: offsetY,
+								eventName: eventName
+							}, onWheelStop);
+						}
+						if (!$targetmirror.data('isRunning')) {
+							me._wheelAdjust($targetmirror, $targetmirroritems, {
+								type: mirrortype,
+								delta: delta,
+								offsetY: offsetY,
+								eventName: eventName
+							});
+						}
+					}, 20);
+				}
+
+			}
+
+			function onWheelStop(current, option) {
+
+				var eventName = option.eventName;
+				$target.data('current', current);
+				me.trigger(eventName, current);
+			}
 
 			this._bindMinuteEvent();
 
 			this._bindHourEvent();
 
-			this._bindDayEvent();
-
-			var me = this;
 			this.$el.on('touchstart', function () {
 				me.show();
 			});
@@ -341,142 +512,8 @@ var DIREACTION_DOWN = 'down';
 		},
 		_bindMinuteEvent: function () {
 			var me = this;
-			var timer = 0;
-			var touch = {};
-			var start;
-			var delta;
-			var firstTouch;
-			var stopped;
 
-			this.$minute.on('touchstart', onTouchStart).
-				on('touchmove', onTouchMove).
-				on('touchend', onTouchEnd);
-
-			this.$minutemirror.on('touchstart', onTouchStart).
-				on('touchmove', onTouchMove).
-				on('touchend', onTouchEnd);
-
-
-			function onTouchStart(e) {
-				if (stopped) {
-					stopped = false;
-				}
-
-				firstTouch = e.touches[0];
-				touch.y1 = firstTouch.pageY;
-
-				start = +new Date;
-
-				clearTimeout(timer);
-				if (me.$minute.data('isRunning')) {
-					me.$minute.data('needStop', true);
-				}
-
-				if (me.$minutemirror.data('isRunning')) {
-					me.$minutemirror.data('needStop', true);
-				}
-
-				if (me.$minute.data('tmpYTranslate') || me.$minute.data('tmpYTranslate') === 0) {
-					me.$minute.data('yTranslate', me.$minute.data('tmpYTranslate'));
-				}
-
-				if (me.$minutemirror.data('tmpYTranslate') || me.$minutemirror.data('tmpYTranslate') === 0) {
-					me.$minutemirror.data('yTranslate', me.$minutemirror.data('tmpYTranslate'));
-				}
-
-				e.preventDefault();
-			}
-
-			function onTouchMove(e) {
-				if (stopped)
-					return;
-
-				firstTouch = e.touches[0];
-
-				touch.y2 = firstTouch.pageY;
-
-				if (touch.y2 > me.windowHeight || touch.y2 < 0) {
-					onTouchEnd();
-					return;
-				}
-
-				var distance = touch.y2 - touch.y1;
-
-				me._wheelMove(me.$minute, me.$minuteitems, {
-					distance: distance,
-					type: 'normal.right'
-				});
-				me._wheelMove(me.$minutemirror, me.$minutemirroritems, {
-					distance: distance,
-					type: 'mirror.right'
-				});
-
-
-			}
-
-			function onTouchEnd() {
-				if (!stopped) {
-					stopped = true;
-				}
-
-				touch.y2 = firstTouch.pageY;
-
-				var duration = +new Date - start;
-				delta = touch.y2 - touch.y1;
-
-				var direction = delta > 0 ? DIREACTION_DOWN : DIREACTION_UP;
-
-				delta = Math.abs(delta);
-
-				if (duration < me._options.velocity && delta > me._options.threshold) {
-					var runStep = me._getRunStepBySwipe(delta);
-
-					me._wheelSwipe(me.$minute, me.$minuteitems, {
-						direction: direction,
-						runStep: runStep,
-						delta: delta,
-						type: 'normal.right'
-					}, onWheelStop);
-					me._wheelSwipe(me.$minutemirror, me.$minutemirroritems, {
-						direction: direction,
-						runStep: runStep,
-						delta: delta,
-						type: 'mirror.right'
-					});
-				}
-				else {
-					clearTimeout(timer);
-					var offsetY;
-					if (delta === 0) {
-						offsetY = touch.y2 - me.$wheel.offset().top;
-					}
-					timer = setTimeout(function () {
-						if (!me.$minute.data('isRunning')) {
-							me._wheelAdjust(me.$minute, me.$minuteitems, {
-								type: 'normal.right',
-								delta: delta,
-								offsetY: offsetY
-							}, onWheelStop);
-						}
-						if (!me.$minutemirror.data('isRunning')) {
-							me._wheelAdjust(me.$minutemirror, me.$minutemirroritems, {
-								type: 'mirror.right',
-								delta: delta,
-								offsetY: offsetY
-							});
-						}
-					}, 20);
-				}
-
-			}
-
-			function onWheelStop(current) {
-
-				me.$minute.data('current', current);
-				me.trigger('minute.stop', current);
-			}
-
-			me.on('day.stop', function (e, currentDay) {
+			this.on('day.stop', function (e, currentDay) {
 				var currentMinute;
 
 				if (!me.$minute.data('isRunning')) {
@@ -496,14 +533,18 @@ var DIREACTION_DOWN = 'down';
 			me.on('hour.stop', function (e, currentHour) {
 
 				if (!me.$day.data('isRunning')) {
+
 					var currentMinute;
 					var currentDay = me.$day.data('current');
+
 
 					if (!me.$minute.data('isRunning')) {
 						currentMinute = me.$minute.data('current');
 
 						reFillByHour(currentHour, currentMinute, currentDay);
 					} else {
+
+
 						me.one('minute.stop', function (e, currentMinute) {
 							if (me.$minutemirror.data('isRunning')) {
 								me.$minutemirror.data('needStop', true);
@@ -551,137 +592,8 @@ var DIREACTION_DOWN = 'down';
 		},
 		_bindHourEvent: function () {
 			var me = this;
-			var timer = 0;
-			var touch = {};
-			var start;
-			var delta;
-			var firstTouch;
-			var stopped;
 
-			this.$hour.on('touchstart', onTouchStart).
-				on('touchmove', onTouchMove).
-				on('touchend', onTouchEnd);
-
-			this.$hourmirror.on('touchstart', onTouchStart).
-				on('touchmove', onTouchMove).
-				on('touchend', onTouchEnd);
-
-			function onTouchStart(e) {
-				if (stopped) {
-					stopped = false;
-				}
-
-				firstTouch = e.touches[0];
-				touch.y1 = firstTouch.pageY;
-
-				start = +new Date;
-
-				clearTimeout(timer);
-				if (me.$hour.data('isRunning')) {
-					me.$hour.data('needStop', true);
-				}
-
-				if (me.$hourmirror.data('isRunning')) {
-					me.$hourmirror.data('needStop', true);
-				}
-
-				if (me.$hour.data('tmpYTranslate') || me.$hour.data('tmpYTranslate') === 0) {
-					me.$hour.data('yTranslate', me.$hour.data('tmpYTranslate'));
-				}
-
-				if (me.$hourmirror.data('tmpYTranslate') || me.$hourmirror.data('tmpYTranslate') === 0) {
-					me.$hourmirror.data('yTranslate', me.$hourmirror.data('tmpYTranslate'));
-				}
-
-				e.preventDefault();
-			}
-
-			function onTouchMove(e) {
-				if (stopped)
-					return;
-
-				firstTouch = e.touches[0];
-				touch.y2 = firstTouch.pageY;
-
-				if (touch.y2 > me.windowHeight || touch.y2 < 0) {
-					onTouchEnd();
-					return;
-				}
-
-				var distance = touch.y2 - touch.y1;
-
-				me._wheelMove(me.$hour, me.$houritems, {
-					distance: distance,
-					type: 'normal.middle'
-				});
-				me._wheelMove(me.$hourmirror, me.$hourmirroritems, {
-					distance: distance,
-					type: 'mirror.middle'
-				});
-
-			}
-
-			function onTouchEnd() {
-				if (!stopped) {
-					stopped = true;
-				}
-
-				touch.y2 = firstTouch.pageY;
-
-				var duration = +new Date - start;
-				delta = touch.y2 - touch.y1;
-
-				var direction = delta > 0 ? DIREACTION_DOWN : DIREACTION_UP;
-
-				delta = Math.abs(delta);
-				if (duration < me._options.velocity && delta > me._options.threshold) {
-					var runStep = me._getRunStepBySwipe(delta);
-
-					me._wheelSwipe(me.$hour, me.$houritems, {
-						direction: direction,
-						runStep: runStep,
-						delta: delta,
-						type: 'normal.middle'
-					}, onWheelStop);
-					me._wheelSwipe(me.$hourmirror, me.$hourmirroritems, {
-						direction: direction,
-						runStep: runStep,
-						delta: delta,
-						type: 'mirror.middle'
-					});
-				}
-				else {
-					clearTimeout(timer);
-					var offsetY;
-					if (delta === 0) {
-						offsetY = touch.y2 - me.$wheel.offset().top;
-					}
-					timer = setTimeout(function () {
-						if (!me.$hour.data('isRunning')) {
-							me._wheelAdjust(me.$hour, me.$houritems, {
-								type: 'normal.middle',
-								delta: delta,
-								offsetY: offsetY
-							}, onWheelStop);
-						}
-						if (!me.$hourmirror.data('isRunning')) {
-							me._wheelAdjust(me.$hourmirror, me.$hourmirroritems, {
-								type: 'mirror.middle',
-								delta: delta,
-								offsetY: offsetY
-							});
-						}
-					}, 20);
-				}
-
-			}
-
-			function onWheelStop(current) {
-				me.$hour.data('current', current);
-				me.trigger('hour.stop', current);
-			}
-
-			me.on('day.stop', function (e, currentDay) {
+			this.on('day.stop', function (e, currentDay) {
 
 				var currentHour;
 				if (!me.$hour.data('isRunning')) {
@@ -710,138 +622,6 @@ var DIREACTION_DOWN = 'down';
 				currentHour = Math.min(end, currentHour + begin);
 
 				me._fillHours(begin, end, currentHour)
-			}
-		},
-		_bindDayEvent: function () {
-			var me = this;
-			var timer = 0;
-			var touch = {};
-			var start;
-			var delta;
-			var firstTouch;
-			var stopped;
-
-			this.$day.on('touchstart', onTouchStart).
-				on('touchmove', onTouchMove).
-				on('touchend', onTouchEnd);
-
-			this.$daymirror.on('touchstart', onTouchStart).
-				on('touchmove', onTouchMove).
-				on('touchend', onTouchEnd);
-
-			function onTouchStart(e) {
-				if (stopped) {
-					stopped = false;
-				}
-
-				firstTouch = e.touches[0];
-				touch.y1 = firstTouch.pageY;
-
-				start = +new Date;
-
-				clearTimeout(timer);
-				if (me.$day.data('isRunning')) {
-					me.$day.data('needStop', true);
-				}
-
-				if (me.$daymirror.data('isRunning')) {
-					me.$daymirror.data('needStop', true);
-				}
-
-				if (me.$day.data('tmpYTranslate') || me.$day.data('tmpYTranslate') === 0) {
-					me.$day.data('yTranslate', me.$day.data('tmpYTranslate'));
-				}
-
-				if (me.$daymirror.data('tmpYTranslate') || me.$daymirror.data('tmpYTranslate') === 0) {
-					me.$daymirror.data('yTranslate', me.$daymirror.data('tmpYTranslate'));
-				}
-
-				e.preventDefault();
-			}
-
-			function onTouchMove(e) {
-				if (stopped)
-					return;
-
-				firstTouch = e.touches[0];
-				touch.y2 = firstTouch.pageY;
-
-				if (touch.y2 > me.windowHeight || touch.y2 < 0) {
-					onTouchEnd();
-					return;
-				}
-
-				var distance = touch.y2 - touch.y1;
-
-				me._wheelMove(me.$day, me.$dayitems, {
-					distance: distance,
-					type: 'normal.left'
-				});
-				me._wheelMove(me.$daymirror, me.$daymirroritems, {
-					distance: distance,
-					type: 'mirror.left'
-				});
-			}
-
-			function onTouchEnd() {
-				if (!stopped) {
-					stopped = true;
-				}
-
-				touch.y2 = firstTouch.pageY;
-
-				var duration = +new Date - start;
-				delta = touch.y2 - touch.y1;
-
-				var direction = delta > 0 ? DIREACTION_DOWN : DIREACTION_UP;
-
-				delta = Math.abs(delta);
-
-				//swipe
-				if (duration < me._options.velocity && delta > me._options.threshold) {
-					var runStep = me._getRunStepBySwipe(delta);
-
-					me._wheelSwipe(me.$day, me.$dayitems, {
-						direction: direction,
-						runStep: runStep,
-						delta: delta,
-						type: 'normal.left'
-					}, onWheelStop);
-					me._wheelSwipe(me.$daymirror, me.$daymirroritems, {
-						direction: direction,
-						runStep: runStep,
-						delta: delta,
-						type: 'mirror.left'
-					});
-				} else {
-					clearTimeout(timer);
-					var offsetY;
-					if (delta === 0) {
-						offsetY = touch.y2 - me.$wheel.offset().top;
-					}
-					timer = setTimeout(function () {
-						if (!me.$day.data('isRunning')) {
-							me._wheelAdjust(me.$day, me.$dayitems, {
-								type: 'normal.left',
-								delta: delta,
-								offsetY: offsetY
-							}, onWheelStop);
-						}
-						if (!me.$daymirror.data('isRunning')) {
-							me._wheelAdjust(me.$daymirror, me.$daymirroritems, {
-								type: 'mirror.left',
-								delta: delta,
-								offsetY: offsetY
-							});
-						}
-					}, 20);
-				}
-
-			}
-
-			function onWheelStop(current) {
-				me.$day.data('current', current);
-				me.trigger('day.stop', current);
 			}
 		},
 		_wheelMove: function ($wheel, $items, option) {
@@ -910,7 +690,7 @@ var DIREACTION_DOWN = 'down';
 			} else {
 
 				if (delta !== 0 && translate % steplen === 0) {
-					callback && callback(Math.abs(translate / steplen));
+					callback && callback(Math.abs(translate / steplen), option);
 					return;
 				}
 
@@ -948,7 +728,8 @@ var DIREACTION_DOWN = 'down';
 				direction: direction,
 				runDistance: runDistance,
 				duration: duration,
-				easeFn: easing.easeOutQuad
+				easeFn: easing.easeOutQuad,
+				eventName: option.eventName
 			};
 
 			this._wheelRun($wheel, $items, runOption, callback);
@@ -1017,7 +798,8 @@ var DIREACTION_DOWN = 'down';
 				runDistance: runDistance,
 				duration: duration,
 				easeFn: easeFn,
-				easeExtra: easeExtra
+				easeExtra: easeExtra,
+				eventName: option.eventName
 			};
 
 			this._wheelRun($wheel, $items, runOption, callback);
@@ -1080,7 +862,7 @@ var DIREACTION_DOWN = 'down';
 					me._setItemsDeg($items, translate, begin, type);
 
 					this.stop();
-					callback && callback(Math.abs(translate / steplen));
+					callback && callback(Math.abs(translate / steplen), option);
 					return;
 				}
 
