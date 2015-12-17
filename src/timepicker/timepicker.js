@@ -68,9 +68,9 @@ var DIREACTION_DOWN = 'down';
 			},
 			velocity: 300,
 			threshold: 15,
-			moveThreshold: 5,
+			speed: 4,
 			swipeDuration: 2500,
-			swipeDefaultStep: 4,
+			//swipeDefaultStep: 4,
 			rollbackDuration: 1000,
 			backDuration: 500,
 			adjustDuration: 400,
@@ -970,7 +970,7 @@ var DIREACTION_DOWN = 'down';
 		_getRunStepBySwipe: function (distance) {
 			var steplen = this._options.step.len;
 
-			return (Math.floor(distance / steplen) + (distance % steplen < 10 ? 0 : 1)) * 4;
+			return (Math.floor(distance / steplen) + (distance % steplen < 10 ? 0 : 1)) * this._options.speed;
 		},
 		_getEaseExtraByDiff: function (diff) {
 			return Math.min(5, diff * 0.05);
