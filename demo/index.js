@@ -9,13 +9,12 @@ $date.timePicker({
 		filter: ['今天', '明天', '后天'],
 		format: 'M月d日'
 	}
+}).on('timePicker.select', function (e, selectedTime, selectedText) {
+	$(this).text(selectedText);
 });
 
 $date.on('click', function () {
-	$(this).timePicker('show')
-		.on('timePicker.select', function (e, selectedTime, selectedText) {
-			$(this).text(selectedText);
-		});
+	$(this).timePicker('show');
 });
 
 

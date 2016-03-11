@@ -13,7 +13,9 @@
   "keywords": [
     "time-picker",
     "javascript",
-    "ios"
+    "ios",
+    "UIDatePicker",
+    "UIPickerView"
   ],
   "licenses": "MIT",
   "repository": {
