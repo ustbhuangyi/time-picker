@@ -19,7 +19,6 @@ var MINUTE_STEP = 10;
 			}
 		},
 		_create: function () {
-
 			this.selectedDayIndex = 0;
 			this.selectedHourIndex = 0;
 			this.selectedMinuteIndex = 0;
@@ -140,53 +139,12 @@ var MINUTE_STEP = 10;
 				//day change
 				if (index === 0) {
 					me.selectedDayIndex = selectedIndex;
-					var beginHour = 0
-					var beginMinute = 0;
-					if (me.days[selectedIndex].value - +minTime < 0) {
-						//more than one day
-						if (me.days[me.selectedDayIndex].value - +minTime < -date.DAY_TIMESTAMP) {
-							beginHour = 24;
-						} else {
-							beginHour = minTime.getHours();
-							if (minTime.getMinutes() > 51) {
-								beginHour += 1;
-							}
-						}
-						me._initHours(beginHour);
-						var dist = $(this).picker('refill', me.hours, 1);
-						var distHour = me.hours[dist].value;
-						if (distHour === beginHour) {
-							beginMinute = me._roundMinute(minTime.getMinutes());
-						}
-						//today now
-						if (selectedIndex === 0 && dist === 0) {
-							beginMinute = false;
-						}
-						me._initMinutes(beginMinute);
-						$(this).picker('refill', me.minutes, 2);
-					} else {
-						me._initHours(beginHour);
-						$(this).picker('refill', me.hours, 1);
-						me._initMinutes(beginMinute);
-						$(this).picker('refill', me.minutes, 2);
-					}
+					me._handleHourAndMinute(minTime);
 				}
 				//hour change
 				else if (index === 1) {
 					me.selectedHourIndex = selectedIndex;
-					if (me.days[me.selectedDayIndex].value - +minTime < 0) {
-						var beginMinute = 0;
-						var beginHour = minTime.getHours();
-						if (me.hours[selectedIndex].value === beginHour) {
-							beginMinute = me._roundMinute(minTime.getMinutes());
-						}
-						//today now
-						if (me.selectedDayIndex === 0 && selectedIndex === 0) {
-							beginMinute = false;
-						}
-						me._initMinutes(beginMinute);
-						$(this).picker('refill', me.minutes, 2);
-					}
+					me._handleMinute(minTime);
 				} else {
 					me.selectedMinuteIndex = selectedIndex;
 				}
@@ -195,45 +153,63 @@ var MINUTE_STEP = 10;
 		_roundMinute: function (minute) {
 			return Math.ceil(minute / MINUTE_STEP) * MINUTE_STEP
 		},
+		_handleHourAndMinute: function (minTime) {
+			var beginHour = 0;
+			var beginMinute = 0;
+			if (this.days[this.selectedDayIndex].value - +minTime < 0) {
+				//more than one day
+				if (this.days[this.selectedDayIndex].value - +minTime < -date.DAY_TIMESTAMP) {
+					beginHour = 24;
+				} else {
+					beginHour = minTime.getHours();
+					if (minTime.getMinutes() > 51) {
+						beginHour += 1;
+					}
+				}
+
+				this._initHours(beginHour);
+				var dist = this.$picker.picker('refill', this.hours, 1);
+				var distHour = this.hours[dist].value;
+				if (distHour === beginHour) {
+					beginMinute = this._roundMinute(minTime.getMinutes());
+				}
+				//today now
+				if (this.selectedDayIndex === 0 && dist === 0) {
+					beginMinute = false;
+				}
+				this._initMinutes(beginMinute);
+				this.$picker.picker('refill', this.minutes, 2);
+			} else {
+				this._initHours(beginHour);
+				this.$picker.picker('refill', this.hours, 1);
+				this._initMinutes(beginMinute);
+				this.$picker.picker('refill', this.minutes, 2);
+			}
+		},
+		_handleMinute: function (minTime) {
+			if (this.days[this.selectedDayIndex].value - +minTime < 0) {
+				var beginMinute = 0;
+				var beginHour = minTime.getHours();
+				if (this.hours[this.selectedHourIndex].value === beginHour) {
+					beginMinute = this._roundMinute(minTime.getMinutes());
+				}
+				//today now
+				if (this.selectedDayIndex === 0 && this.selectedHourIndex === 0) {
+					beginMinute = false;
+				}
+				this._initMinutes(beginMinute);
+				this.$picker.picker('refill', this.minutes, 2);
+			}
+		},
 		show: function () {
 			this.$picker.picker('show', function () {
 				var now = +new Date;
 				var minTime = new Date(now + this._options.delay * date.MINUTE_TIMESTAMP);
 
 				this._initDays();
-				this.$picker.picker(this.days, 0);
+				//this.$picker.picker(this.days, 0);
+				this._handleHourAndMinute(minTime);
 
-				var beginHour = 0;
-				var beginMinute = 0;
-				if (this.days[this.selectedDayIndex].value - +minTime < 0) {
-					//more than one day
-					if (this.days[this.selectedDayIndex].value - +minTime < -date.DAY_TIMESTAMP) {
-						beginHour = 24;
-					} else {
-						beginHour = minTime.getHours();
-						if (minTime.getMinutes() > 51) {
-							beginHour += 1;
-						}
-					}
-
-					this._initHours(beginHour);
-					var dist = this.$picker.picker('refill', this.hours, 1);
-					var distHour = this.hours[dist].value;
-					if (distHour === beginHour) {
-						beginMinute = this._roundMinute(minTime.getMinutes());
-					}
-					//today now
-					if (this.selectedDayIndex === 0 && dist === 0) {
-						beginMinute = false;
-					}
-					this._initMinutes(beginMinute);
-					this.$picker.picker('refill', this.minutes, 2);
-				} else {
-					this._initHours(beginHour);
-					this.$picker.picker('refill', this.hours, 1);
-					this._initMinutes(beginMinute);
-					this.$picker.picker('refill', this.minutes, 2);
-				}
 			}.bind(this));
 		}
 	});
