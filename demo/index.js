@@ -3,6 +3,7 @@ FastClick.attach(document.body);
 var $date = $('#date');
 
 $date.timePicker({
+	title: '选择出行时间',
 	delay: 15,
 	day: {
 		len: 7,

@@ -11,6 +11,7 @@ var MINUTE_STEP = 10;
 (function (gmu, $, undefined) {
 	gmu.define('timePicker', {
 		options: {
+			title: '选择出行时间',
 			delay: 15,
 			day: {
 				len: 7,
@@ -38,7 +39,7 @@ var MINUTE_STEP = 10;
 
 			this.$picker = this.$el.picker({
 				data: [this.days, this.hours, this.minutes],
-				title: '选择出行时间'
+				title: this._options.title
 			});
 
 			this._bindEvent();
