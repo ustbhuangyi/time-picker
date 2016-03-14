@@ -16,6 +16,7 @@ you can choose time after current time,  but if you want to choose time before c
 var $date = $('#date');
 
 $date.timePicker({
+	title: '选择出行时间',
 	delay: 15,
 	day: {
 		len: 7,
