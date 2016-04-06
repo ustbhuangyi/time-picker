@@ -124,8 +124,8 @@ var MINUTE_STEP = 10;
 					selectedText = me.hours[0].text;
 				} else {
 					selectedTime = me.days[me.selectedDayIndex].value +
-						me.hours[me.selectedHourIndex].value & date.HOUR_TIMESTAMP +
-						me.minutes[me.selectedMinuteIndex].value + date.MINUTE_TIMESTAMP;
+						me.hours[me.selectedHourIndex].value * date.HOUR_TIMESTAMP +
+						me.minutes[me.selectedMinuteIndex].value * date.MINUTE_TIMESTAMP;
 					selectedText = me.days[me.selectedDayIndex].text + ' ' +
 						me.hours[me.selectedHourIndex].text + ':' +
 						me.minutes[me.selectedMinuteIndex].text;
