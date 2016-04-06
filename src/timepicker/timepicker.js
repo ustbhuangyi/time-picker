@@ -134,6 +134,10 @@ var MINUTE_STEP = 10;
 				me.trigger('timePicker.select', selectedTime, selectedText);
 			});
 
+			this.$picker.on('picker.cancel', function () {
+				me.trigger('timePicker.cancel');
+			});
+
 			this.$picker.on('picker.change', function (e, index, selectedIndex) {
 				var now = +new Date;
 				var minTime = new Date(now + me._options.delay * date.MINUTE_TIMESTAMP);
