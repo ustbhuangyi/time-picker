@@ -3,11 +3,11 @@ FastClick.attach(document.body);
 var $date = $('#date');
 
 $date.timePicker({
-	title: '选择出行时间',
+	title: '选择出行时间1',
 	delay: 15,
 	day: {
-		len: 7,
-		filter: ['今天', '明天', '后天'],
+		len: 8,
+		filter: ['今天'],
 		format: 'M月d日'
 	}
 }).on('timePicker.select', function (e, selectedTime, selectedText) {

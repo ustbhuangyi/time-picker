@@ -15,7 +15,7 @@ var MINUTE_STEP = 10;
 			delay: 15,
 			day: {
 				len: 7,
-				filter: ['今天', '明天', '后天'],
+				filter: [],
 				format: 'M月d日'
 			}
 		},
