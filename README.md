@@ -34,6 +34,20 @@ $date.on('click', function () {
 });
 ```
 
+## 事件 ##
+timePicker.change
+
+当一列滚动停止的时候，会派发timePicker.change事件，同时会传递选择日期的时间戳和显示的文本
+
+timePicker.select
+
+当用户点击确定的时候，会派发timePicker.select事件，同时会传递选择日期的时间戳和显示的文本
+
+timePicker.cancel
+
+当用户点击取消的时候，timePicker.cancel事件。
+
+
 ## Build ##
 clone this repo
 ```bash
