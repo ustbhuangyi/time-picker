@@ -185,6 +185,7 @@ var MINUTE_STEP = 10;
 
 				this._initHours(beginHour);
 				var dist = this.$picker.picker('refill', this.hours, 1);
+				this.selectedHourIndex = dist;
 				var distHour = this.hours[dist].value;
 				if (distHour === beginHour) {
 					beginMinute = this._roundMinute(minTime.getMinutes());
@@ -194,12 +195,12 @@ var MINUTE_STEP = 10;
 					beginMinute = false;
 				}
 				this._initMinutes(beginMinute);
-				this.$picker.picker('refill', this.minutes, 2);
+				this.selectedMinuteIndex = this.$picker.picker('refill', this.minutes, 2);
 			} else {
 				this._initHours(beginHour);
-				this.$picker.picker('refill', this.hours, 1);
+				this.selectedHourIndex = this.$picker.picker('refill', this.hours, 1);
 				this._initMinutes(beginMinute);
-				this.$picker.picker('refill', this.minutes, 2);
+				this.selectedMinuteIndex = this.$picker.picker('refill', this.minutes, 2);
 			}
 		},
 		_handleMinute: function (minTime) {
@@ -214,7 +215,7 @@ var MINUTE_STEP = 10;
 					beginMinute = false;
 				}
 				this._initMinutes(beginMinute);
-				this.$picker.picker('refill', this.minutes, 2);
+				this.selectedMinuteIndex = this.$picker.picker('refill', this.minutes, 2);
 			}
 		},
 		show: function () {

@@ -17,6 +17,7 @@ $date.timePicker({
 	console.log('user cancel');
 }).on('timePicker.change', function (e, selectedTime, selectedText) {
 	console.log(selectedTime);
+	console.log(selectedText);
 });
 
 $date.on('click', function () {
