@@ -166,21 +166,8 @@
 					me.selectedHourIndex = selectedIndex[1];
 					me.selectedMinuteIndex = selectedIndex[2];
 	
-					var selectedTime;
-					var selectedText;
-					if (me.selectedDayIndex === 0 && me.selectedHourIndex === 0) {
-						selectedTime = +new Date;
-						selectedText = me.hours[0].text;
-					} else {
-						selectedTime = me.days[me.selectedDayIndex].value +
-							me.hours[me.selectedHourIndex].value * date.HOUR_TIMESTAMP +
-							me.minutes[me.selectedMinuteIndex].value * date.MINUTE_TIMESTAMP;
-						selectedText = me.days[me.selectedDayIndex].text + ' ' +
-							me.hours[me.selectedHourIndex].text + ':' +
-							me.minutes[me.selectedMinuteIndex].text;
-					}
-	
-					me.trigger('timePicker.select', selectedTime, selectedText);
+					var select = getSelect();
+					me.trigger('timePicker.select', select.selectedTime, select.selectedText);
 				});
 	
 				this.$picker.on('picker.cancel', function () {
@@ -202,7 +189,31 @@
 					} else {
 						me.selectedMinuteIndex = selectedIndex;
 					}
+	
+					var select = getSelect();
+					me.trigger('timePicker.change', select.selectedTime, select.selectedText);
 				});
+	
+				function getSelect() {
+					var selectedTime;
+					var selectedText;
+					if (me.selectedDayIndex === 0 && me.selectedHourIndex === 0) {
+						selectedTime = +new Date;
+						selectedText = me.hours[0].text;
+					} else {
+						selectedTime = me.days[me.selectedDayIndex].value +
+							me.hours[me.selectedHourIndex].value * date.HOUR_TIMESTAMP +
+							me.minutes[me.selectedMinuteIndex].value * date.MINUTE_TIMESTAMP;
+						selectedText = me.days[me.selectedDayIndex].text + ' ' +
+							me.hours[me.selectedHourIndex].text + ':' +
+							me.minutes[me.selectedMinuteIndex].text;
+					}
+	
+					return {
+						selectedTime: selectedTime,
+						selectedText: selectedText
+					};
+				}
 			},
 			_roundMinute: function (minute) {
 				return Math.ceil(minute / MINUTE_STEP) * MINUTE_STEP
